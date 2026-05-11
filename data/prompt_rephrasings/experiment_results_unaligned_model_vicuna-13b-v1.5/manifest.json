@@ -1,0 +1,17 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "prompt_rephrasings/experiment_results_unaligned_model_vicuna-13b-v1.5.json",
+  "original_bytes": 204724,
+  "original_sha256": "28a204854f48911a8b22b408344ba78fc5bb9b19b67ae432db1fe6491853cd5e",
+  "top_level": "array",
+  "total_records": 100,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 100,
+      "bytes": 184324,
+      "sha256": "460766c6b70a60503e360b34cce824a40cab03a7281144b57787721267d17c75"
+    }
+  ]
+}

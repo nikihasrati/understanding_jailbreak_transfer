@@ -1,0 +1,23 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "cross_prompt_transfer_generations/llama-3.2-1b-instruct_cross_prompt_transfer_generations.json",
+  "original_bytes": 7252674,
+  "original_sha256": "058042794e60abb1b587e329a1cca4732cb3f3788bbe1f25bb345e357063346d",
+  "top_level": "array",
+  "total_records": 10000,
+  "total_chunks": 2,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 3119838,
+      "sha256": "26b7650ba6cd3f5dadd4ff15374daede65557ab742524776c0acc9572813ca83"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 3291734,
+      "sha256": "f5e83b19fe6afcca5df2c15f4031d9ede544b85889778de9719081bd9e098dd2"
+    }
+  ]
+}

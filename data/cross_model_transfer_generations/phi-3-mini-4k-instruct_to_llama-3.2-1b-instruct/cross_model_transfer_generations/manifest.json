@@ -1,0 +1,23 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "cross_model_transfer_generations/phi-3-mini-4k-instruct_to_llama-3.2-1b-instruct/cross_model_transfer_generations.json",
+  "original_bytes": 7632734,
+  "original_sha256": "f1f0410d6a00b43e746252c264834e68aa3776beb5c6f9d4938ac6f30f8aeadc",
+  "top_level": "array",
+  "total_records": 10000,
+  "total_chunks": 2,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 3194097,
+      "sha256": "a5202fde771f6e7abf96fb6cc0754f6409671dff11238ae7a9c54adbb5757a08"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 3414200,
+      "sha256": "1c9513c431e4829707bbbaf263f43a2d178c58d260e02b309f16fa3c2976b788"
+    }
+  ]
+}

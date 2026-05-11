@@ -1,0 +1,23 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "cross_model_transfer_generations/llama-3.2-1b-instruct_to_qwen2.5-3b-instruct/cross_model_transfer_generations.json",
+  "original_bytes": 13661266,
+  "original_sha256": "226a77d8a14aec213ab886b6fe537c8acb9475f3facb7f29786180da21d9e9d9",
+  "top_level": "array",
+  "total_records": 10000,
+  "total_chunks": 2,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 6212694,
+      "sha256": "070b1fa1e7325e87221b2a790d14fcfd500659b8c2a5a23a73e9ad8b9f87d60f"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 6422029,
+      "sha256": "7d1682639369b49cbc8ed458c3ee87f5a558a061f4b65a026ce64342071aa7cb"
+    }
+  ]
+}
