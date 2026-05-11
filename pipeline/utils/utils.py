@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from matplotlib.colors import ListedColormap
+from pipeline.artifacts import json_chunk_paths
 
 # Open a list of json files and load them into a single list
 def load_json_files(file_paths: list[str]):
@@ -131,12 +132,8 @@ def get_jailbreak_activations(cfg):
 # and are sorted in the order they should be concatenated
 # Returns a dataframe
 def concat_json_files_in_dir(dir_path):
-    files = os.listdir(dir_path)
-    files.sort(key=lambda x: int(x.split('_', 1)[0]))  # Sort files by the number at the start of the filename
-
     all_data = []
-    for file in files:
-        file_path = os.path.join(dir_path, file)
+    for file_path in json_chunk_paths(dir_path):
         with open(file_path, 'r') as f:
             data = json.load(f)
             all_data.extend(data)

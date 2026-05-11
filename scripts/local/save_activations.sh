@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python -m pipeline.activations.save_activations "$@"
+python -m pipeline activations save "$@"

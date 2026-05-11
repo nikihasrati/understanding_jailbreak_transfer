@@ -5,17 +5,17 @@ import os
 import torch
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Export activations into alternate layouts.')
     parser.add_argument('--input-dir', required=True)
     parser.add_argument('--output-dir', required=True)
     parser.add_argument('--format', choices=['nested_by_suffix_layer'], required=True)
     parser.add_argument('--num-prompts', type=int, default=100)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     os.makedirs(args.output_dir, exist_ok=True)
     with open(os.path.join(args.input_dir, 'manifest.json'), 'r') as f:
         manifest = json.load(f)

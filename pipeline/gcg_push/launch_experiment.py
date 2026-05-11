@@ -9,7 +9,7 @@ from typing import Iterable
 from pipeline.gcg_push import config as gcg_config
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Print or submit config-driven GCG-push workflow commands.')
     parser.add_argument('--config', default=str(gcg_config.DEFAULT_CONFIG))
     parser.add_argument('--backend', choices=['local', 'slurm'], default='slurm')
@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--time', default=None)
     parser.add_argument('--model-cache-root', default=None)
     parser.add_argument('--logs-dir', default=None)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def q(value: object) -> str:
@@ -84,7 +84,7 @@ def raw_commands(config: dict, args: argparse.Namespace) -> list[str]:
     commands = []
     for intervention, coeff in selected_pairs(config, args):
         inner = ' '.join([
-            'python -m pipeline.gcg_push.run_gcg',
+            'python -m pipeline gcg-push run',
             '--config', q(args.config),
             '--intervention', q(intervention),
             '--coeff', q(coeff),
@@ -102,7 +102,7 @@ def artifact_commands(config: dict, args: argparse.Namespace) -> list[str]:
     commands = []
     for intervention, coeff in selected_pairs(config, args):
         commands.append(' '.join([
-            'python -m pipeline.gcg_push.create_datasets',
+            'python -m pipeline gcg-push create-datasets',
             '--config', q(args.config), '--intervention', q(intervention), '--coeff', q(coeff), '--check',
         ]))
     return commands
@@ -114,9 +114,9 @@ def generation_commands(config: dict, args: argparse.Namespace) -> list[str]:
         artifact = gcg_config.artifact_dir(config, intervention, coeff, 'transfer')
         num_chunks = gcg_config.workflow_chunks(config, intervention, 'generation_chunks')
         flag = '--suffix-push' if intervention == 'suffix_push' else '--orth-shift'
-        commands.append(f'python -m tools.prepare_generation_chunks --artifact-dir {q(artifact)} --num-output-chunks {num_chunks}')
+        commands.append(f'python -m pipeline artifacts prepare-generation --artifact-dir {q(artifact)} --num-output-chunks {num_chunks}')
         inner = ' '.join([
-            'python -m pipeline.generation.generate_completions', '--model-path', q(gcg_config.model_id(config)),
+            'python -m pipeline completions generate', '--model-path', q(gcg_config.model_id(config)),
             '--gcg-push', '--coeff', q(coeff), flag, '--chunk-id', '"$SLURM_ARRAY_TASK_ID"' if args.backend == 'slurm' else '<chunk>', '--resume',
         ])
         if args.backend == 'slurm':
@@ -132,12 +132,12 @@ def evaluation_commands(config: dict, args: argparse.Namespace) -> list[str]:
     for intervention, coeff in selected_pairs(config, args):
         artifact = gcg_config.artifact_dir(config, intervention, coeff, 'transfer')
         eval_chunks = gcg_config.workflow_chunks(config, intervention, 'evaluation_chunks')
-        flag = '--suffix_push' if intervention == 'suffix_push' else '--orth_shift'
-        commands.append(f'python -m tools.combine_completions --input-dir {q(artifact)} --input-subdir generation_chunks --output-subdir evaluation_chunks --num-output-chunks {eval_chunks} --check-stage generation')
+        flag = '--suffix-push' if intervention == 'suffix_push' else '--orth-shift'
+        commands.append(f'python -m pipeline artifacts combine-completions --input-dir {q(artifact)} --input-subdir generation_chunks --output-subdir evaluation_chunks --num-output-chunks {eval_chunks} --check-stage generation')
         inner = ' '.join([
-            'python -m pipeline.evaluation.evaluate_completions', '--model_path', q(gcg_config.model_id(config)),
-            '--gcg_push', '--coeff', q(coeff), flag, '--chunk_id', '"$SLURM_ARRAY_TASK_ID"' if args.backend == 'slurm' else '<chunk>',
-            '--num_gpus', str(slurm_option(config, args, 'judge_gpus_per_task', args.judge_gpus_per_task, 4)),
+            'python -m pipeline completions evaluate', '--model-path', q(gcg_config.model_id(config)),
+            '--gcg-push', '--coeff', q(coeff), flag, '--chunk-id', '"$SLURM_ARRAY_TASK_ID"' if args.backend == 'slurm' else '<chunk>',
+            '--num-gpus', str(slurm_option(config, args, 'judge_gpus_per_task', args.judge_gpus_per_task, 4)),
         ])
         if args.backend == 'slurm':
             commands.append(slurm_wrap(config, args, f'eval-{intervention}-{coeff}', f'0-{eval_chunks - 1}%{slurm_option(config, args, "max_parallel_tasks", args.max_parallel_tasks, eval_chunks)}', inner, judge=True))
@@ -153,23 +153,23 @@ def publish_commands(config: dict, args: argparse.Namespace) -> list[str]:
         artifact = gcg_config.artifact_dir(config, intervention, coeff, 'transfer')
         publish_chunks = gcg_config.artifact_chunks(config, intervention, 'transfer')
         source = f'gcg_push_results/{gcg_config.model_alias(config)}/{intervention}/coeff-{coeff}/transfer'
-        commands.append(f'python -m tools.combine_completions --input-dir {q(artifact)} --input-subdir evaluation_chunks --output-subdir chunks --num-output-chunks {publish_chunks} --check-stage evaluation --write-manifest --manifest-source {q(source)}')
+        commands.append(f'python -m pipeline artifacts combine-completions --input-dir {q(artifact)} --input-subdir evaluation_chunks --output-subdir chunks --num-output-chunks {publish_chunks} --check-stage evaluation --write-manifest --manifest-source {q(source)}')
     return commands
 
 
 def analysis_commands(config: dict, args: argparse.Namespace) -> list[str]:
-    base = ['python -m pipeline.gcg_push.data_analysis', '--config', q(args.config)]
+    base = ['python -m pipeline gcg-push analyze', '--config', q(args.config)]
     if args.intervention == 'suffix_push':
-        base.append('--suffix_push')
+        base.append('--suffix-push')
     if args.intervention == 'orth_shift':
-        base.append('--orth_shift')
+        base.append('--orth-shift')
     if args.coeff:
         base.extend(['--coeff', q(args.coeff)])
     return [' '.join(base)]
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv=None) -> None:
+    args = parse_args(argv)
     config = gcg_config.load_config(args.config)
     if args.submit and args.stage == 'all':
         raise SystemExit('Do not submit --stage all: run each stage after the previous Slurm jobs finish.')

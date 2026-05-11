@@ -14,7 +14,7 @@ from pipeline.gcg_push import config as gcg_config
 from pipeline.gcg_push.gcg_adapted import GCGConfig, run
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Run coefficient-modified GCG for one JailbreakBench prompt index.')
     parser.add_argument('--config', default=str(gcg_config.DEFAULT_CONFIG))
     parser.add_argument('--intervention', required=True, choices=['suffix_push', 'orth_shift'])
@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--device', default='cuda:0')
     parser.add_argument('--torch-dtype', choices=['bfloat16', 'float16', 'float32'], default='bfloat16')
     parser.add_argument('--force', action=argparse.BooleanOptionalAction, default=False)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def torch_dtype(name: str):
@@ -89,8 +89,8 @@ def seed_values(config: dict[str, Any], args: argparse.Namespace) -> list[int]:
     return list(range(start, end + 1))
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv=None) -> None:
+    args = parse_args(argv)
     config = gcg_config.load_config(args.config)
     if args.model_id:
         config.setdefault('experiment', {})['model_id'] = args.model_id

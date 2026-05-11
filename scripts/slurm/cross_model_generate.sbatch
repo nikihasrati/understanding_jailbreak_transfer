@@ -15,4 +15,4 @@ export TRANSFORMERS_CACHE="$HF_HOME/hub"
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export NCCL_P2P_DISABLE=1
 
-python -m pipeline.cross_model.generate_completions   --source_model_path "$SOURCE_MODEL_PATH"   --target_model_path "$TARGET_MODEL_PATH"   --chunk_id "$CHUNK_ID"
+python -m pipeline cross-model generate   --source-model-path "$SOURCE_MODEL_PATH"   --target-model-path "$TARGET_MODEL_PATH"   --chunk-id "$CHUNK_ID"

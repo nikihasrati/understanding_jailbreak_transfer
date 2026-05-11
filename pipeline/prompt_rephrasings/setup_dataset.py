@@ -5,13 +5,16 @@ import pandas as pd
 
 from pipeline.config import Config
 
-def parse_arguments():
+def parse_args(argv=None):
     """Parse arguments from command line."""
     parser = argparse.ArgumentParser(description="Parse arguments.")
-    parser.add_argument('--model_path', type=str, required=True, help='Path to the model')
+    parser.add_argument('--model-path', '--model_path', dest='model_path', type=str, required=True, help='Path to the model')
     parser.add_argument('--input-path', default=None, help='Unprocessed rephrasing JSON. Defaults to the model-specific path under data/prompt_rephrasings/.')
     parser.add_argument('--output-path', default=None, help='Output JSON. Defaults to the model-specific prompt rephrasing combined.json path.')
-    return parser.parse_args()
+    return parser.parse_args(argv)
+
+
+parse_arguments = parse_args
 
 def setup_dataset(rephrasings_df, suffixes_df, output_path):
     cross_df = rephrasings_df.merge(suffixes_df, how='cross')
@@ -59,8 +62,8 @@ def process_rephrasings(unprocessed_rephrasings_df):
 
     return result
 
-if __name__ == "__main__":
-    args = parse_arguments()
+def main(argv=None):
+    args = parse_args(argv)
     cfg = Config(model_path=args.model_path)
     
     input_path = args.input_path or cfg.unprocessed_prompt_rephrasings_path()
@@ -71,3 +74,7 @@ if __name__ == "__main__":
 
     # Setup the dataset
     setup_dataset(rephrasings_df, suffixes_df, output_path)
+
+
+if __name__ == "__main__":
+    main()

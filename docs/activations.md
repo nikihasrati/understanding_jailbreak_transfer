@@ -51,7 +51,7 @@ activations_by_suffix_layer[17][12][3]
 ## Regenerate Prompt Activations
 
 ```bash
-python -m pipeline.activations.save_activations \
+python -m pipeline activations save \
   --model-path "$MODEL_ID" \
   --input-kind prompts \
   --output-format canonical_tensor_chunks
@@ -67,7 +67,7 @@ export NUM_PROMPTS=100
 ```
 
 ```bash
-python -m pipeline.activations.save_activations \
+python -m pipeline activations save \
   --model-path "$MODEL_ID" \
   --input-kind multi_seed_jailbreak \
   --num-chunks "$NUM_ACTIVATION_CHUNKS" \
@@ -79,7 +79,7 @@ Outputs are written under `outputs/activations/<model>/...`, which is intentiona
 ## Export Nested Layout
 
 ```bash
-python -m pipeline.activations.export_activations \
+python -m pipeline activations export \
   --input-dir outputs/activations/$MODEL_ALIAS/multi_seed_jailbreak_activations_transfer/canonical_tensor_chunks \
   --output-dir outputs/activations/$MODEL_ALIAS/multi_seed_jailbreak_activations_transfer/nested_by_suffix_layer \
   --format nested_by_suffix_layer \

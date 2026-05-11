@@ -1,11 +1,14 @@
 import argparse
 import os
 
-def parse_arguments():
+def parse_args(argv=None):
     """Parse arguments from command line."""
     parser = argparse.ArgumentParser(description="Parse arguments.")
-    parser.add_argument('--model_path', type=str, required=True, help='Path to the model')
-    return parser.parse_args()
+    parser.add_argument('--model-path', '--model_path', dest='model_path', type=str, required=True, help='Path to the model')
+    return parser.parse_args(argv)
+
+
+parse_arguments = parse_args
 
 def calculate_cosine_similarity(activations, refusal_direction):
     chunk_size = 10
@@ -592,8 +595,11 @@ def data_analysis(cfg):
 
 
 
-if __name__ == "__main__":
-    args = parse_arguments()
+def main(argv=None):
+    args = parse_args(argv)
+    global torch, np, pg, pd, plt, patches, F, sm, sns, pearsonr
+    global LogisticRegression, roc_auc_score, classification_report, f1_score, train_test_split
+    global Config, utils, get_prompt_activations, get_jailbreak_view
     import torch
     import numpy as np
     import pingouin as pg
@@ -612,3 +618,7 @@ if __name__ == "__main__":
     from pipeline.utils.activation_utils import get_prompt_activations, get_jailbreak_view
     cfg = Config(model_path=args.model_path)
     data_analysis(cfg)
+
+
+if __name__ == "__main__":
+    main()

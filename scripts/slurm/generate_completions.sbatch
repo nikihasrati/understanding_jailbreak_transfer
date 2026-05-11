@@ -16,4 +16,4 @@ export TRANSFORMERS_CACHE="$HF_HOME/hub"
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export NCCL_P2P_DISABLE=1
 
-python -m pipeline.generation.generate_completions   --model-path "$MODEL_PATH"   --chunk-id "$CHUNK_ID"   --num-chunks "$NUM_CHUNKS"   --resume   --"$FLAG_TYPE"
+python -m pipeline completions generate   --model-path "$MODEL_PATH"   --chunk-id "$CHUNK_ID"   --num-chunks "$NUM_CHUNKS"   --resume   --"$FLAG_TYPE"

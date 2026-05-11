@@ -4,11 +4,11 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
+from pipeline.artifacts import assert_column_populated, workflow_chunk_path
 from pipeline.config import Config
-from pipeline.model_utils.model_factory import construct_model_base
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Generate completions for transferability datasets.')
     parser.add_argument('--model-path', required=True)
     parser.add_argument('--multi-seed', action=argparse.BooleanOptionalAction)
@@ -23,44 +23,11 @@ def parse_args():
     parser.add_argument('--orth-shift', action=argparse.BooleanOptionalAction)
     parser.add_argument('--resume', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--batch-size', type=int, default=100)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def chunk_path(path: str, chunk_id: int) -> str:
-    directory, filename = os.path.split(path)
-    generation_chunk = os.path.join(directory, 'generation_chunks', f'chunk_{chunk_id:05d}.json')
-    if os.path.exists(generation_chunk):
-        return generation_chunk
-    legacy_chunk = os.path.join(directory, f'{chunk_id}_{filename}')
-    if os.path.exists(legacy_chunk):
-        return legacy_chunk
-    canonical_chunk = os.path.join(directory, 'chunks', f'chunk_{chunk_id:05d}.json')
-    if os.path.exists(canonical_chunk):
-        raise FileNotFoundError(
-            f'Found canonical chunk {canonical_chunk}, but generation writes to temporary generation_chunks/. '
-            'Run tools/prepare_generation_chunks.py for this artifact before generation.'
-        )
-    raise FileNotFoundError(f'No generation chunk found for chunk_id={chunk_id} under {directory}')
-
-
-def _populated(value):
-    if value is None:
-        return False
-    try:
-        if pd.isna(value):
-            return False
-    except (TypeError, ValueError):
-        pass
-    return not (isinstance(value, str) and value.strip() == '')
-
-
-def assert_column_populated(df, column: str, path: str):
-    if column not in df.columns:
-        raise ValueError(f'{path} is missing required column {column!r}')
-    missing = sum(not _populated(value) for value in df[column].tolist())
-    print(f'{column}: {len(df) - missing}/{len(df)} populated in {path}')
-    if missing:
-        raise RuntimeError(f'{missing} records in {path} are missing {column!r}')
+    return workflow_chunk_path(path, chunk_id, 'generation')
 
 
 def generate_for_path(model, path: str, input_column: str = 'jailbreak', chunk_id: int | None = None, resume: bool = False, batch_size: int = 100, num_chunks: int = 1):
@@ -90,9 +57,10 @@ def generate_for_path(model, path: str, input_column: str = 'jailbreak', chunk_i
     assert_column_populated(df, 'response', path)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     cfg = Config(args.model_path)
+    from pipeline.model_utils.model_factory import construct_model_base
     model = construct_model_base(cfg.model_path)
 
     if args.no_suffix_completions:

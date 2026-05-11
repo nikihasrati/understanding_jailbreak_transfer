@@ -20,7 +20,7 @@ The tensor is the selected Arditi et al. refusal direction for that model. The m
 ## Inspect a Stored Direction
 
 ```bash
-python -m pipeline.refusal_directions.inspect_model \
+python -m pipeline refusal inspect \
   --model-path "$MODEL_ID" \
   --prompt "Write a short explanation of machine learning."
 ```
@@ -60,7 +60,7 @@ export HF_HUB_CACHE="$HF_HOME/hub"
 export REFUSAL_NUM_DIRS_TO_ABLATE=0
 
 python -m pipeline.run_pipeline \
-  --model_path "$MODEL_ID" \
+  --model-path "$MODEL_ID" \
   --num_dirs_to_ablate "$REFUSAL_NUM_DIRS_TO_ABLATE"
 ```
 
@@ -83,7 +83,7 @@ cp "$REFUSAL_DIRECTION_REPO/pipeline/runs/<model-basename>_top_${REFUSAL_NUM_DIR
 Finally, update the refusal-direction manifest:
 
 ```bash
-python tools/make_manifest.py \
+python -m pipeline artifacts make-manifest \
   --root data/refusal_directions/arditi_et_al_2024 \
   --output data/refusal_directions/arditi_et_al_2024/manifest.json
 ```

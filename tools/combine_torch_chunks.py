@@ -5,15 +5,15 @@ import os
 import torch
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Combine canonical_tensor_chunks into one tensor file.')
     parser.add_argument('--input-dir', required=True)
     parser.add_argument('--output', required=True)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     with open(os.path.join(args.input_dir, 'manifest.json'), 'r') as f:
         manifest = json.load(f)
     tensors = [torch.load(os.path.join(args.input_dir, c['path']), map_location='cpu') for c in manifest['chunks']]

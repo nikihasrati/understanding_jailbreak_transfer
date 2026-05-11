@@ -16,4 +16,4 @@ export TRANSFORMERS_CACHE="$HF_HOME/hub"
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export NCCL_P2P_DISABLE=1
 
-python -m pipeline.activations.save_activations   --model-path "$MODEL_PATH"   --input-kind "$INPUT_KIND"   --num-chunks "$NUM_CHUNKS"   --batch-size "$BATCH_SIZE"
+python -m pipeline activations save   --model-path "$MODEL_PATH"   --input-kind "$INPUT_KIND"   --num-chunks "$NUM_CHUNKS"   --batch-size "$BATCH_SIZE"

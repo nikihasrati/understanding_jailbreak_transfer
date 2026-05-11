@@ -1,22 +1,25 @@
 import argparse
-import os 
+from pathlib import Path
 
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib.colors import ListedColormap
 
 from pipeline.config import Config
+from pipeline.utils import utils
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Set up data sets for cross-model analysis.')
-    parser.add_argument('--source_model_path', type=str, required=True, help='Path to the source model')
-    parser.add_argument('--target_model_path', type=str, required=True, help='Path to the target model')
-    return parser.parse_args()
+    parser.add_argument('--source-model-path', '--source_model_path', dest='source_model_path', type=str, required=True, help='Path to the source model')
+    parser.add_argument('--target-model-path', '--target_model_path', dest='target_model_path', type=str, required=True, help='Path to the target model')
+    return parser.parse_args(argv)
 
 def plot_success_matrix(success_matrix_df, source_cfg, target_cfg):
-    save_dir = os.path.join(source_cfg.FIGURES, f'{source_cfg.model_alias}_to_{target_cfg.model_alias}')
+    save_dir = Path(source_cfg.FIGURES) / f'{source_cfg.model_alias}_to_{target_cfg.model_alias}'
     file_name = "cross_model_transfer_success_matrix.png"
-    save_path = os.path.join(save_dir, file_name)
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+    save_path = save_dir / file_name
+    save_dir.mkdir(parents=True, exist_ok=True)
 
     fig, ax = plt.subplots(figsize=(25, 25))
     cmap = ListedColormap(['white', '#4C72B0'])
@@ -33,25 +36,28 @@ def plot_success_matrix(success_matrix_df, source_cfg, target_cfg):
     plt.savefig(save_path)
     plt.close()
 
-def data_analysis(source_cfg, target_cfg):
-    save_dir = os.path.join(target_cfg.cross_model_transfer_generations_dir(), f'{source_cfg.model_alias}_to_{target_cfg.model_alias}')
-    file_name = "cross_model_transfer_generations.json"
-    save_path = os.path.join(save_dir, file_name)
-    transfer_df = pd.read_json(save_path)
 
+def transfer_generations_path(source_cfg, target_cfg) -> Path:
+    return (
+        Path(target_cfg.cross_model_transfer_generations_dir())
+        / f'{source_cfg.model_alias}_to_{target_cfg.model_alias}'
+        / 'cross_model_transfer_generations.json'
+    )
+
+
+def load_previously_refused_transfer_df(source_cfg, target_cfg) -> pd.DataFrame:
+    transfer_df = pd.read_json(transfer_generations_path(source_cfg, target_cfg))
     previously_refused_indices = utils.get_previously_refused_indices(target_cfg)
-    transfer_df = transfer_df[transfer_df['prompt_id'].isin(previously_refused_indices)]
+    return transfer_df[transfer_df['prompt_id'].isin(previously_refused_indices)]
 
+
+def data_analysis(source_cfg, target_cfg):
+    transfer_df = load_previously_refused_transfer_df(source_cfg, target_cfg)
     success_matrix_df = utils.get_jailbreak_success_matrix_df(transfer_df)
     plot_success_matrix(success_matrix_df, source_cfg, target_cfg)
 
-def main():
-    args = parse_args()
-    global pd, plt, utils, ListedColormap
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    from pipeline.utils import utils
-    from matplotlib.colors import ListedColormap
+def main(argv=None):
+    args = parse_args(argv)
     source_cfg = Config(model_path=args.source_model_path)
     target_cfg = Config(model_path=args.target_model_path)
     

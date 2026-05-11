@@ -1,5 +1,6 @@
 import argparse
-import os
+import json
+from pathlib import Path
 
 import torch
 import pandas as pd
@@ -8,14 +9,14 @@ from tqdm import tqdm
 from pipeline.config import Config
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Regenerate activation tensors.')
     parser.add_argument('--model-path', required=True)
     parser.add_argument('--input-kind', choices=['prompts', 'suffixes', 'cross_prompt_jailbreak', 'multi_seed_jailbreak'], required=True)
     parser.add_argument('--output-format', choices=['canonical_tensor_chunks'], default='canonical_tensor_chunks')
     parser.add_argument('--num-chunks', type=int, default=1)
     parser.add_argument('--batch-size', type=int, default=100)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def load_inputs(cfg: Config, input_kind: str):
@@ -30,14 +31,15 @@ def load_inputs(cfg: Config, input_kind: str):
     raise ValueError(input_kind)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     cfg = Config(args.model_path)
     from pipeline.model_utils.model_factory import construct_model_base
     from pipeline.submodules.generate_activations import get_activations
     model = construct_model_base(cfg.model_path)
     inputs, output_dir = load_inputs(cfg, args.input_kind)
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     batches = []
     with torch.no_grad():
@@ -48,12 +50,11 @@ def main():
     chunks = torch.chunk(activations, args.num_chunks, dim=0)
     manifest = {'artifact_format': args.output_format, 'input_kind': args.input_kind, 'num_examples': len(inputs), 'num_chunks': len(chunks), 'chunks': []}
     for i, chunk in enumerate(chunks):
-        path = os.path.join(output_dir, f'activations_chunk_{i:05d}.pt')
+        path = output_dir / f'activations_chunk_{i:05d}.pt'
         torch.save(chunk, path)
-        manifest['chunks'].append({'path': os.path.basename(path), 'shape': list(chunk.shape)})
-    with open(os.path.join(output_dir, 'manifest.json'), 'w') as f:
-        json_dump = __import__('json').dump
-        json_dump(manifest, f, indent=2)
+        manifest['chunks'].append({'path': path.name, 'shape': list(chunk.shape)})
+    with (output_dir / 'manifest.json').open('w') as f:
+        json.dump(manifest, f, indent=2)
         f.write('\n')
 
 

@@ -1,27 +1,20 @@
 import argparse
-import hashlib
 import json
 from pathlib import Path
 
-
-def sha256_file(path):
-    h = hashlib.sha256()
-    with open(path, 'rb') as f:
-        for block in iter(lambda: f.read(1024 * 1024), b''):
-            h.update(block)
-    return h.hexdigest()
+from pipeline.artifacts import sha256_file
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Split a JSON array into manifest-backed chunks.')
     parser.add_argument('--input', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--records-per-chunk', type=int, default=5000)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     src = Path(args.input)
     out = Path(args.output)
     chunks_dir = out / 'chunks'

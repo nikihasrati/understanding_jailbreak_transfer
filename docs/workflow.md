@@ -84,7 +84,7 @@ Later steps define any extra variables immediately before use.
 
 **Paper connection:** Section 4, "Generation of adversarial suffixes"; Section 5.1 Figures 1-2; Appendix B model/suffix counts.
 
-`pipeline.suffix_generation.run_gcg` runs the GCG attack for one JailbreakBench harmful prompt index and a seed range. Each seed produces a candidate adversarial suffix for the prompt. The output is the raw result tree under `data/gcg_results/raw/`.
+`python -m pipeline suffixes run-gcg` runs the GCG attack for one JailbreakBench harmful prompt index and a seed range. Each seed produces a candidate adversarial suffix for the prompt. The output is the raw result tree under `data/gcg_results/raw/`.
 
 Set these variables for this step:
 
@@ -95,7 +95,7 @@ export GCG_END_SEED=99
 ```
 
 ```bash
-python -m pipeline.suffix_generation.run_gcg \
+python -m pipeline suffixes run-gcg \
   --model-id "$MODEL_ID" \
   --index "$GCG_PROMPT_INDEX" \
   --num-steps "$GCG_NUM_STEPS" \
@@ -111,7 +111,7 @@ Run this for all prompt indices. On Slurm, use an array job where `SLURM_ARRAY_T
 
 **Paper connection:** Section 4, "Data" and "Generation of adversarial suffixes"; Section 5.1 intra-model transfer and multi-seed transfer matrices.
 
-`pipeline.suffix_generation.create_datasets` replaces the old separate `create_dataset.py` and `check_dataset.py` flow. It reads raw GCG results, extracts prompt/suffix records, creates no-transfer and transfer datasets, and then prints validation results when `--check` is set. The validation pass reports missing prompt IDs and prompt IDs that do not have the expected number of seeds.
+`python -m pipeline suffixes create-datasets` replaces the old separate `create_dataset.py` and `check_dataset.py` flow. It reads raw GCG results, extracts prompt/suffix records, creates no-transfer and transfer datasets, and then prints validation results when `--check` is set. The validation pass reports missing prompt IDs and prompt IDs that do not have the expected number of seeds.
 
 Set these variables for this step:
 
@@ -122,7 +122,7 @@ export EXPECTED_SEEDS=100
 ```
 
 ```bash
-python -m pipeline.suffix_generation.create_datasets \
+python -m pipeline suffixes create-datasets \
   --model-path "$MODEL_ID" \
   --results-dir data/gcg_results/raw \
   --output-dir "$OUTPUT_ROOT" \
@@ -139,7 +139,7 @@ Use the printed check output before continuing. If prompts or seeds are missing,
 
 **Paper connection:** Reproducibility support for Sections 4-5.
 
-A manifest-backed artifact is a directory containing `manifest.json` plus canonical `chunks/`. The manifest records record counts, file sizes, and SHA256 checksums. `tools/split_json_records.py` creates the chunked release format, and `tools/verify_manifest.py` confirms that the committed chunks still match the manifest. See [artifacts.md](artifacts.md) for details.
+A manifest-backed artifact is a directory containing `manifest.json` plus canonical `chunks/`. The manifest records record counts, file sizes, and SHA256 checksums. `pipeline artifacts split-json` creates the chunked release format, and `pipeline artifacts verify-manifest` confirms that the committed chunks still match the manifest. See [artifacts.md](artifacts.md) for details.
 
 After generating a large JSON array, split it into canonical chunks.
 
@@ -152,12 +152,12 @@ export JSON_RECORDS_PER_CHUNK=5000
 ```
 
 ```bash
-python tools/split_json_records.py \
+python -m pipeline artifacts split-json \
   --input "$ARTIFACT_DIR/combined.json" \
   --output "$ARTIFACT_DIR" \
   --records-per-chunk "$JSON_RECORDS_PER_CHUNK"
 
-python tools/verify_manifest.py \
+python -m pipeline artifacts verify-manifest \
   --manifest "$ARTIFACT_DIR/manifest.json"
 ```
 
@@ -167,7 +167,7 @@ python tools/verify_manifest.py \
 
 **Paper connection:** Operational setup for the Section 4 model-response generation step.
 
-Generation jobs should not modify canonical `chunks/` directly. `tools/prepare_generation_chunks.py` reads the manifest-backed artifact, verifies that the requested input column exists, clears stale completion fields if requested, and writes temporary `generation_chunks/`. Use more chunks here when generation is cheap to parallelize across many single-GPU jobs.
+Generation jobs should not modify canonical `chunks/` directly. `pipeline artifacts prepare-generation` reads the manifest-backed artifact, verifies that the requested input column exists, clears stale completion fields if requested, and writes temporary `generation_chunks/`. Use more chunks here when generation is cheap to parallelize across many single-GPU jobs.
 
 Set these variables for this step:
 
@@ -178,7 +178,7 @@ export NUM_GENERATION_CHUNKS=32
 ```
 
 ```bash
-python tools/prepare_generation_chunks.py \
+python -m pipeline artifacts prepare-generation \
   --artifact-dir "$ARTIFACT_DIR" \
   --num-output-chunks "$NUM_GENERATION_CHUNKS" \
   --input-column jailbreak
@@ -190,7 +190,7 @@ python tools/prepare_generation_chunks.py \
 
 **Paper connection:** Section 4, "Evaluating jailbreak success"; Definition 1 ASR inputs.
 
-`pipeline.generation.generate_completions` sends each `jailbreak` string to the target model and writes a `response` field into `generation_chunks/`. These model responses are not yet ASR labels; they are the raw text that the jailbreak judge evaluates in the next step.
+`python -m pipeline completions generate` sends each `jailbreak` string to the target model and writes a `response` field into `generation_chunks/`. These model responses are not yet ASR labels; they are the raw text that the jailbreak judge evaluates in the next step.
 
 `--chunk-id "$GENERATION_CHUNK_ID"` selects one file in `generation_chunks/`; chunk IDs map to zero-padded files such as `chunk_00000.json`. `--resume` skips rows that already have a non-empty `response`.
 
@@ -204,7 +204,7 @@ export GENERATION_CHUNK_ID=0
 ```
 
 ```bash
-python -m pipeline.generation.generate_completions \
+python -m pipeline completions generate \
   --model-path "$MODEL_ID" \
   --multi-seed \
   --num-chunks "$NUM_GENERATION_CHUNKS" \
@@ -215,7 +215,7 @@ python -m pipeline.generation.generate_completions \
 After all generation jobs finish, check that every response was produced:
 
 ```bash
-python tools/check_completions.py \
+python -m pipeline artifacts check-completions \
   --artifact-dir "$ARTIFACT_DIR" \
   --subdir generation_chunks \
   --stage generation
@@ -229,7 +229,7 @@ The generation script also checks its own chunk before exiting. The full check a
 
 **Paper connection:** Operational setup for the Section 4 jailbreak-judge evaluation step.
 
-Evaluation uses the Llama 3 jailbreak judge and typically needs more GPUs per job than generation, so use fewer chunks for this step. Set `NUM_JUDGE_GPUS` to the GPU count for your judge jobs. `tools/combine_completions.py` verifies that all `response` fields are populated before writing `evaluation_chunks/`. This is the replacement for the old combine step: it both checks completeness and changes the shard count for the judge workload.
+Evaluation uses the Llama 3 jailbreak judge and typically needs more GPUs per job than generation, so use fewer chunks for this step. Set `NUM_JUDGE_GPUS` to the GPU count for your judge jobs. `pipeline artifacts combine-completions` verifies that all `response` fields are populated before writing `evaluation_chunks/`. This is the replacement for the old combine step: it both checks completeness and changes the shard count for the judge workload.
 
 Set these variables for this step:
 
@@ -240,7 +240,7 @@ export NUM_EVALUATION_CHUNKS=8
 ```
 
 ```bash
-python tools/combine_completions.py \
+python -m pipeline artifacts combine-completions \
   --input-dir "$ARTIFACT_DIR" \
   --input-subdir generation_chunks \
   --output-subdir evaluation_chunks \
@@ -254,9 +254,9 @@ python tools/combine_completions.py \
 
 **Paper connection:** Section 4, "Evaluating jailbreak success"; Definition 1 ASR; all Section 5 transfer labels.
 
-`pipeline.evaluation.evaluate_completions` runs the jailbreak judge on each `(prompt, response)` pair and writes a `jailbroken` boolean field into `evaluation_chunks/`. The `jailbroken` field is the success indicator used by ASR calculations, transfer matrices, and logistic-regression labels.
+`python -m pipeline completions evaluate` runs the jailbreak judge on each `(prompt, response)` pair and writes a `jailbroken` boolean field into `evaluation_chunks/`. The `jailbroken` field is the success indicator used by ASR calculations, transfer matrices, and logistic-regression labels.
 
-`--chunk_id "$EVALUATION_CHUNK_ID"` selects one file in `evaluation_chunks/`; chunk IDs map to zero-padded files such as `chunk_00000.json`.
+`--chunk-id "$EVALUATION_CHUNK_ID"` selects one file in `evaluation_chunks/`; chunk IDs map to zero-padded files such as `chunk_00000.json`.
 
 Set these variables for this step:
 
@@ -268,17 +268,17 @@ export NUM_JUDGE_GPUS=4
 ```
 
 ```bash
-python -m pipeline.evaluation.evaluate_completions \
-  --model_path "$MODEL_ID" \
-  --multi_seed \
-  --chunk_id "$EVALUATION_CHUNK_ID" \
-  --num_gpus "$NUM_JUDGE_GPUS"
+python -m pipeline completions evaluate \
+  --model-path "$MODEL_ID" \
+  --multi-seed \
+  --chunk-id "$EVALUATION_CHUNK_ID" \
+  --num-gpus "$NUM_JUDGE_GPUS"
 ```
 
 After all evaluation jobs finish, check that every record was evaluated:
 
 ```bash
-python tools/check_completions.py \
+python -m pipeline artifacts check-completions \
   --artifact-dir "$ARTIFACT_DIR" \
   --subdir evaluation_chunks \
   --stage evaluation
@@ -292,7 +292,7 @@ The field is called `jailbroken`: `true` means the judge classified the response
 
 **Paper connection:** Reproducibility support for Section 5 analysis inputs.
 
-After evaluation is complete, replace canonical `chunks/` with the evaluated records and update `manifest.json`. This is the step that makes the final evaluated artifact ready to commit and publish. `tools/combine_completions.py` checks that every `jailbroken` label is present before writing the canonical chunks.
+After evaluation is complete, replace canonical `chunks/` with the evaluated records and update `manifest.json`. This is the step that makes the final evaluated artifact ready to commit and publish. `pipeline artifacts combine-completions` checks that every `jailbroken` label is present before writing the canonical chunks.
 
 Set these variables for this step:
 
@@ -303,7 +303,7 @@ export NUM_PUBLISHED_CHUNKS=50
 ```
 
 ```bash
-python tools/combine_completions.py \
+python -m pipeline artifacts combine-completions \
   --input-dir "$ARTIFACT_DIR" \
   --input-subdir evaluation_chunks \
   --output-subdir chunks \
@@ -312,7 +312,7 @@ python tools/combine_completions.py \
   --write-manifest \
   --manifest-source multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer
 
-python tools/verify_manifest.py \
+python -m pipeline artifacts verify-manifest \
   --manifest "$ARTIFACT_DIR/manifest.json"
 ```
 
@@ -324,7 +324,7 @@ Commit `chunks/` and `manifest.json`; do not commit `generation_chunks/`, `evalu
 
 **Paper connection:** Reproducibility support for Definition 1 ASR and Section 5 analyses.
 
-Run `pipeline.evaluation.normalize_jailbreak_labels` when imported artifacts or older outputs encode labels as `0`/`1`, strings, or nullable values. Analysis scripts expect booleans so that `true` consistently means a successful jailbreak.
+Run `python -m pipeline completions normalize-labels` when imported artifacts or older outputs encode labels as `0`/`1`, strings, or nullable values. Analysis scripts expect booleans so that `true` consistently means a successful jailbreak.
 
 Set these variables for this step:
 
@@ -334,8 +334,8 @@ export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_
 ```
 
 ```bash
-python -m pipeline.evaluation.normalize_jailbreak_labels \
-  --input "$ARTIFACT_DIR/combined.json" \
+python -m pipeline completions normalize-labels \
+  --path "$ARTIFACT_DIR/combined.json" \
   --output "$ARTIFACT_DIR/combined.json"
 ```
 
@@ -357,14 +357,14 @@ export NUM_JUDGE_GPUS=4
 ```
 
 ```bash
-python -m pipeline.generation.generate_completions \
+python -m pipeline completions generate \
   --model-path "$MODEL_ID" \
   --no-suffix-completions
 
-python -m pipeline.evaluation.evaluate_completions \
-  --model_path "$MODEL_ID" \
-  --no_suffix_completions \
-  --num_gpus "$NUM_JUDGE_GPUS"
+python -m pipeline completions evaluate \
+  --model-path "$MODEL_ID" \
+  --no-suffix-completions \
+  --num-gpus "$NUM_JUDGE_GPUS"
 ```
 
 **Output:** No-suffix responses and `jailbroken` labels are saved under `data/no_suffix_generations/${MODEL_ALIAS}_no_suffix_generations/`, usually as `combined.json` plus any chunked release files you create from it.
@@ -373,10 +373,10 @@ python -m pipeline.evaluation.evaluate_completions \
 
 **Paper connection:** Definition 2; Sections 3.2-3.3; Appendix A optimal-layer selection.
 
-Stored refusal directions are used by activation-based analyses. The vectors are already committed under `data/refusal_directions/arditi_et_al_2024/`. `pipeline.refusal_directions.inspect_model` loads the stored direction, extracts a prompt activation at the selected layer, and prints the dot product and cosine similarity as a sanity check.
+Stored refusal directions are used by activation-based analyses. The vectors are already committed under `data/refusal_directions/arditi_et_al_2024/`. `python -m pipeline refusal inspect` loads the stored direction, extracts a prompt activation at the selected layer, and prints the dot product and cosine similarity as a sanity check.
 
 ```bash
-python -m pipeline.refusal_directions.inspect_model \
+python -m pipeline refusal inspect \
   --model-path "$MODEL_ID"
 ```
 
@@ -388,7 +388,7 @@ To regenerate directions from the external refusal-direction repo, see [refusal_
 
 **Paper connection:** Definitions 2, 4, 5, and 6; Sections 5.2-5.5; Appendix C.
 
-Activations are internal model vectors used for semantic-similarity, refusal-connectivity, suffix-push, and orthogonal-shift analyses. They are not stored in Git. `pipeline.activations.save_activations` regenerates hidden states, and `pipeline.activations.export_activations` converts the default tensor chunks into alternate layouts when an analysis needs a different indexing scheme.
+Activations are internal model vectors used for semantic-similarity, refusal-connectivity, suffix-push, and orthogonal-shift analyses. They are not stored in Git. `python -m pipeline activations save` regenerates hidden states, and `python -m pipeline activations export` converts the default tensor chunks into alternate layouts when an analysis needs a different indexing scheme.
 
 Set these variables for this step:
 
@@ -397,7 +397,7 @@ export NUM_ACTIVATION_CHUNKS=32
 ```
 
 ```bash
-python -m pipeline.activations.save_activations \
+python -m pipeline activations save \
   --model-path "$MODEL_ID" \
   --input-kind multi_seed_jailbreak \
   --num-chunks "$NUM_ACTIVATION_CHUNKS" \
@@ -412,11 +412,11 @@ See [activations.md](activations.md) for activation formats and export commands.
 
 **Paper connection:** Section 5.1; Sections 5.2-5.5; Figures 1-2 and 4-6; Tables 1-3; Appendix C.
 
-`pipeline.analysis.multi_seed_data_analysis` summarizes the multi-seed no-transfer and transfer datasets. It computes success matrices, aggregate attack success rates, most and least successful suffixes, and activation/refusal-direction plots when the required activation artifacts exist. It is the main intra-model analysis entry point for prompt vulnerability, suffix potency, semantic similarity, refusal connectivity, suffix push, orthogonal shift, and joint logistic-regression effects.
+`python -m pipeline analysis multi-seed` summarizes the multi-seed no-transfer and transfer datasets. It computes success matrices, aggregate attack success rates, most and least successful suffixes, and activation/refusal-direction plots when the required activation artifacts exist. It is the main intra-model analysis entry point for prompt vulnerability, suffix potency, semantic similarity, refusal connectivity, suffix push, orthogonal shift, and joint logistic-regression effects.
 
 ```bash
-python -m pipeline.analysis.multi_seed_data_analysis \
-  --model_path "$MODEL_ID"
+python -m pipeline analysis multi-seed \
+  --model-path "$MODEL_ID"
 ```
 
 **Output:** Summary statistics are printed to stdout, and figures are saved under `figures/$MODEL_ALIAS/`.
@@ -443,50 +443,50 @@ export NUM_JUDGE_GPUS=4
 ```
 
 ```bash
-python -m pipeline.cross_model.set_up_dataset \
-  --source_model_path "$SOURCE_MODEL_ID" \
-  --target_model_path "$TARGET_MODEL_ID" \
+python -m pipeline cross-model setup \
+  --source-model-path "$SOURCE_MODEL_ID" \
+  --target-model-path "$TARGET_MODEL_ID" \
   --num-chunks "$NUM_CROSS_MODEL_GENERATION_CHUNKS"
 ```
 
 This writes `generation_chunks/` for the source-target pair. Generate responses, check them, re-shard into `evaluation_chunks/`, and evaluate:
 
 ```bash
-python -m pipeline.cross_model.generate_completions \
-  --source_model_path "$SOURCE_MODEL_ID" \
-  --target_model_path "$TARGET_MODEL_ID" \
-  --chunk_id "$CROSS_MODEL_GENERATION_CHUNK_ID"
+python -m pipeline cross-model generate \
+  --source-model-path "$SOURCE_MODEL_ID" \
+  --target-model-path "$TARGET_MODEL_ID" \
+  --chunk-id "$CROSS_MODEL_GENERATION_CHUNK_ID"
 
-python tools/check_completions.py \
+python -m pipeline artifacts check-completions \
   --artifact-dir "$CROSS_MODEL_ARTIFACT_DIR" \
   --subdir generation_chunks \
   --stage generation
 
-python tools/combine_completions.py \
+python -m pipeline artifacts combine-completions \
   --input-dir "$CROSS_MODEL_ARTIFACT_DIR" \
   --input-subdir generation_chunks \
   --output-subdir evaluation_chunks \
   --num-output-chunks "$NUM_CROSS_MODEL_EVALUATION_CHUNKS" \
   --check-stage generation
 
-python -m pipeline.cross_model.evaluate_completions \
-  --source_model_path "$SOURCE_MODEL_ID" \
-  --target_model_path "$TARGET_MODEL_ID" \
-  --chunk_id "$CROSS_MODEL_EVALUATION_CHUNK_ID" \
-  --num_gpus "$NUM_JUDGE_GPUS"
+python -m pipeline cross-model evaluate \
+  --source-model-path "$SOURCE_MODEL_ID" \
+  --target-model-path "$TARGET_MODEL_ID" \
+  --chunk-id "$CROSS_MODEL_EVALUATION_CHUNK_ID" \
+  --num-gpus "$NUM_JUDGE_GPUS"
 ```
 
 Combine completed cross-model evaluation chunks and plot the success matrix:
 
 ```bash
-python -m pipeline.cross_model.combine_dataset \
+python -m pipeline cross-model combine \
   --source-model-path "$SOURCE_MODEL_ID" \
   --target-model-path "$TARGET_MODEL_ID" \
   --num-chunks "$NUM_CROSS_MODEL_EVALUATION_CHUNKS"
 
-python -m pipeline.cross_model.data_analysis \
-  --source_model_path "$SOURCE_MODEL_ID" \
-  --target_model_path "$TARGET_MODEL_ID"
+python -m pipeline cross-model analyze \
+  --source-model-path "$SOURCE_MODEL_ID" \
+  --target-model-path "$TARGET_MODEL_ID"
 ```
 
 **Output:** Cross-model records are saved under `$CROSS_MODEL_ARTIFACT_DIR/`, with temporary `generation_chunks/` and `evaluation_chunks/` during generation/evaluation. The combined evaluated dataset and figures are saved under the same cross-model artifact area and `figures/${SOURCE_ALIAS}_to_${TARGET_ALIAS}/`.
@@ -506,7 +506,7 @@ cp configs/gcg_push_paper.example.yaml configs/gcg_push_paper.yaml
 Run the raw altered-GCG jobs for the configured prompt indices and coefficients:
 
 ```bash
-python -m pipeline.gcg_push.launch_experiment \
+python -m pipeline gcg-push launch \
   --config configs/gcg_push_paper.yaml \
   --backend local \
   --stage raw
@@ -517,7 +517,7 @@ The command prints one local command per prompt index, coefficient, and interven
 Build published chunked artifacts from raw outputs:
 
 ```bash
-python -m pipeline.gcg_push.create_datasets \
+python -m pipeline gcg-push create-datasets \
   --config configs/gcg_push_paper.yaml \
   --check \
   --strict
@@ -528,17 +528,17 @@ This writes `data/gcg_push_results/$MODEL_ALIAS/{suffix_push,orth_shift}/coeff-$
 Generate completions, evaluate them, and promote evaluated records back to canonical chunks:
 
 ```bash
-python -m pipeline.gcg_push.launch_experiment \
+python -m pipeline gcg-push launch \
   --config configs/gcg_push_paper.yaml \
   --backend local \
   --stage generation
 
-python -m pipeline.gcg_push.launch_experiment \
+python -m pipeline gcg-push launch \
   --config configs/gcg_push_paper.yaml \
   --backend local \
   --stage evaluation
 
-python -m pipeline.gcg_push.launch_experiment \
+python -m pipeline gcg-push launch \
   --config configs/gcg_push_paper.yaml \
   --backend local \
   --stage publish
@@ -549,7 +549,7 @@ The generation stage creates temporary `generation_chunks/` and fills `response`
 Analyze all configured coefficients and interventions:
 
 ```bash
-python -m pipeline.gcg_push.data_analysis \
+python -m pipeline gcg-push analyze \
   --config configs/gcg_push_paper.yaml
 ```
 
@@ -559,7 +559,7 @@ python -m pipeline.gcg_push.data_analysis \
 
 **Paper connection:** Section 5.6, "Prompt rephrasing"; Appendix C prompt-rephrasing instructions.
 
-Prompt rephrasing tests whether changing the wording of a harmful prompt changes its alignment with the refusal direction and, in turn, changes transfer success. `pipeline.prompt_rephrasings.setup_dataset` converts generated paraphrases into evaluation records. The generation and evaluation steps then use the same model-response and jailbreak-judge workflow as the main multi-seed artifacts.
+Prompt rephrasing tests whether changing the wording of a harmful prompt changes its alignment with the refusal direction and, in turn, changes transfer success. `python -m pipeline prompt-rephrasings setup` converts generated paraphrases into evaluation records. The generation and evaluation steps then use the same model-response and jailbreak-judge workflow as the main multi-seed artifacts.
 
 Set these variables for this step:
 
@@ -570,21 +570,21 @@ export NUM_JUDGE_GPUS=4
 ```
 
 ```bash
-python -m pipeline.prompt_rephrasings.setup_dataset \
-  --model_path "$MODEL_ID" \
+python -m pipeline prompt-rephrasings setup \
+  --model-path "$MODEL_ID" \
   --input-path data/prompt_rephrasings/${MODEL_ALIAS}_unprocessed_rephrasings.json
 
-python -m pipeline.generation.generate_completions \
+python -m pipeline completions generate \
   --model-path "$MODEL_ID" \
   --rephrasings \
   --chunk-id "$GENERATION_CHUNK_ID" \
   --resume
 
-python -m pipeline.evaluation.evaluate_completions \
-  --model_path "$MODEL_ID" \
+python -m pipeline completions evaluate \
+  --model-path "$MODEL_ID" \
   --rephrasings \
-  --chunk_id "$EVALUATION_CHUNK_ID" \
-  --num_gpus "$NUM_JUDGE_GPUS"
+  --chunk-id "$EVALUATION_CHUNK_ID" \
+  --num-gpus "$NUM_JUDGE_GPUS"
 ```
 
 **Output:** Prompt-rephrasing records are saved under `data/prompt_rephrasings/${MODEL_ALIAS}_prompt_rephrasings/`, with `generation_chunks/`, `evaluation_chunks/`, and final canonical `chunks/` following the same lifecycle as the main transfer artifacts.

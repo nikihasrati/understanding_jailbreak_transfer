@@ -15,4 +15,4 @@ INDEX=${SLURM_ARRAY_TASK_ID}
 export HF_HOME="$MODEL_CACHE_ROOT/.cache/huggingface"
 export TRANSFORMERS_CACHE="$HF_HOME/hub"
 
-python -m pipeline.suffix_generation.run_gcg   --model-id "$MODEL_ID"   --index "$INDEX"   --num-steps "$NUM_STEPS"   --end-seed "$END_SEED"   --results-dir "$RESULTS_DIR"
+python -m pipeline suffixes run-gcg   --model-id "$MODEL_ID"   --index "$INDEX"   --num-steps "$NUM_STEPS"   --end-seed "$END_SEED"   --results-dir "$RESULTS_DIR"

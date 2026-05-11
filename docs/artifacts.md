@@ -20,6 +20,8 @@ data/<artifact-family>/<artifact-name>/
     chunk_00001.json
 ```
 
+Most examples use an unprefixed artifact directory such as `${MODEL_ALIAS}_multiple_seed_results_transfer`. Some published multi-seed transfer artifacts are stored as shard-prefixed directories such as `0_${MODEL_ALIAS}_multiple_seed_results_transfer`; point commands at the exact directory that contains the `manifest.json` you want to process.
+
 A typical manifest looks like this:
 
 ```json
@@ -42,7 +44,7 @@ A typical manifest looks like this:
 The canonical chunk files are the source of truth in Git. Some analysis scripts need a full temporary working JSON file named `combined.json`. Create it from a manifest like this:
 
 ```bash
-python tools/combine_json_chunks.py \
+python -m pipeline artifacts combine-json \
   --manifest data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer/manifest.json \
   --output data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer/combined.json
 ```
@@ -52,7 +54,7 @@ After creating or modifying a working JSON file, split it back into chunked form
 ```bash
 export JSON_RECORDS_PER_CHUNK=5000
 
-python tools/split_json_records.py \
+python -m pipeline artifacts split-json \
   --input data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer/combined.json \
   --output data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer \
   --records-per-chunk "$JSON_RECORDS_PER_CHUNK"
@@ -61,7 +63,7 @@ python tools/split_json_records.py \
 Verify any artifact before publishing it:
 
 ```bash
-python tools/verify_manifest.py \
+python -m pipeline artifacts verify-manifest \
   --manifest data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer/manifest.json
 ```
 
@@ -87,7 +89,7 @@ The intended lifecycle is:
 chunks/ -> generation_chunks/ -> evaluation_chunks/ -> chunks/ + manifest.json
 ```
 
-Use `tools/prepare_generation_chunks.py` to create `generation_chunks/` from a manifest. Use `tools/combine_completions.py` to re-shard `generation_chunks/` into `evaluation_chunks/`, and later to promote evaluated records back into canonical `chunks/`. `tools/check_completions.py` checks that each generation record has a `response` and that each evaluated record has a `jailbroken` label before the artifact is promoted.
+Use `python -m pipeline artifacts prepare-generation` to create `generation_chunks/` from a manifest. Use `python -m pipeline artifacts combine-completions` to re-shard `generation_chunks/` into `evaluation_chunks/`, and later to promote evaluated records back into canonical `chunks/`. `python -m pipeline artifacts check-completions` checks that each generation record has a `response` and that each evaluated record has a `jailbroken` label before the artifact is promoted.
 
 ## Raw GCG Results
 
@@ -98,6 +100,8 @@ data/gcg_results/raw/<model>/index-NNNN/seed-NNNN/results.json
 ```
 
 These files are copied as-is for the v1 release because the current GCG runner writes one file per prompt and seed. Future work is to make GCG write chunked artifacts directly and then migrate the existing raw result tree into that format.
+
+Raw result manifests use a `files` list instead of a chunked `chunks` list. `python -m pipeline artifacts verify-manifest` supports both manifest shapes, but most workflow commands operate on chunked JSON artifacts.
 
 ## GCG-Push Artifacts
 
@@ -110,9 +114,9 @@ data/gcg_push_results/<model_alias>/<intervention>/coeff-<coefficient>/<split>/
     chunk_00000.json
 ```
 
-`<intervention>` is either `suffix_push` or `orth_shift`. `<split>` is `no_transfer` for the suffixes generated on their source prompts and `transfer` for the cross-product evaluation dataset used by `pipeline.gcg_push.data_analysis`.
+`<intervention>` is either `suffix_push` or `orth_shift`. `<split>` is `no_transfer` for the suffixes generated on their source prompts and `transfer` for the cross-product evaluation dataset used by `python -m pipeline gcg-push analyze`.
 
-The paper configuration is `configs/gcg_push_paper.example.yaml`; it records the 20 prompt indices, coefficients, seed ranges, chunk counts, and Slurm defaults used to regenerate these artifacts. Raw rerun outputs are written to `outputs/gcg_push/raw/` and are converted to the published chunked layout with `pipeline.gcg_push.create_datasets`.
+The paper configuration is `configs/gcg_push_paper.example.yaml`; it records the 20 prompt indices, coefficients, seed ranges, chunk counts, and Slurm defaults used to regenerate these artifacts. Raw rerun outputs are written to `outputs/gcg_push/raw/` and are converted to the published chunked layout with `python -m pipeline gcg-push create-datasets`.
 
 ## Binary Files
 

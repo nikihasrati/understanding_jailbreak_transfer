@@ -5,16 +5,16 @@ import os
 import torch
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Split a tensor into canonical_tensor_chunks.')
     parser.add_argument('--input', required=True)
     parser.add_argument('--output-dir', required=True)
     parser.add_argument('--num-chunks', type=int, default=1)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     tensor = torch.load(args.input, map_location='cpu')
     os.makedirs(args.output_dir, exist_ok=True)
     manifest = {'artifact_format': 'canonical_tensor_chunks', 'shape': list(tensor.shape), 'chunks': []}

@@ -8,7 +8,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Run GCG suffix generation for one prompt index.')
     parser.add_argument('--model-id', required=True)
     parser.add_argument('--model-name', default=None)
@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('--num-steps', type=int, default=500)
     parser.add_argument('--end-seed', type=int, default=99)
     parser.add_argument('--results-dir', default='data/gcg_results/raw')
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def run_one(args, seed):
@@ -37,8 +37,8 @@ def run_one(args, seed):
     }
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     if not 0 <= args.index <= 99:
         raise ValueError('index must be between 0 and 99')
     if not 0 <= args.end_seed <= 99:

@@ -1,68 +1,33 @@
 import argparse
 import pandas as pd
-import os
 
 from tqdm import tqdm
 
+from pipeline.artifacts import assert_column_populated, workflow_chunk_path
 from pipeline.config import Config
+from pipeline.evaluation.normalize_jailbreak_labels import to_bool
 
-def parse_arguments():
+def parse_args(argv=None):
     """Parse arguments from command line."""
     parser = argparse.ArgumentParser(description="Parse arguments.")
-    parser.add_argument('--model_path', type=str, required=True, help='Path to the model')
-    parser.add_argument('--num_gpus', type=int, required=False, help='The number of GPUs available')
-    parser.add_argument('--multi_seed', action=argparse.BooleanOptionalAction)
-    parser.add_argument('--chunk_id', required=False, type=int, default=None, help='Chunk ID to process for sharded artifacts')
-    parser.add_argument('--no_suffix_completions', action=argparse.BooleanOptionalAction, help='Whether to evaluate no suffix completions or not')
+    parser.add_argument('--model-path', '--model_path', dest='model_path', type=str, required=True, help='Path to the model')
+    parser.add_argument('--num-gpus', '--num_gpus', dest='num_gpus', type=int, required=False, help='The number of GPUs available')
+    parser.add_argument('--multi-seed', '--multi_seed', dest='multi_seed', action=argparse.BooleanOptionalAction)
+    parser.add_argument('--chunk-id', '--chunk_id', dest='chunk_id', required=False, type=int, default=None, help='Chunk ID to process for sharded artifacts')
+    parser.add_argument('--no-suffix-completions', '--no_suffix_completions', dest='no_suffix_completions', action=argparse.BooleanOptionalAction, help='Whether to evaluate no suffix completions or not')
     parser.add_argument('--rephrasings', action=argparse.BooleanOptionalAction, help='Whether to evaluate rephrasing completions or not')
-    parser.add_argument('--gcg_push', action=argparse.BooleanOptionalAction, help='Whether to evaluate GCG push completions or not')
+    parser.add_argument('--gcg-push', '--gcg_push', dest='gcg_push', action=argparse.BooleanOptionalAction, help='Whether to evaluate GCG push completions or not')
     parser.add_argument('--coeff', type=str, default=None, help='Coefficient for GCG push completions')
-    parser.add_argument('--suffix_push', action=argparse.BooleanOptionalAction, help='Whether to evaluate suffix push completions or not. Only for --gcg_push flag.')
-    parser.add_argument('--orth_shift', action=argparse.BooleanOptionalAction, help='Whether to evaluate orthogonal shift completions or not. Only for --gcg_push flag.')
-    return parser.parse_args()
+    parser.add_argument('--suffix-push', '--suffix_push', dest='suffix_push', action=argparse.BooleanOptionalAction, help='Whether to evaluate suffix push completions or not. Only for --gcg-push flag.')
+    parser.add_argument('--orth-shift', '--orth_shift', dest='orth_shift', action=argparse.BooleanOptionalAction, help='Whether to evaluate orthogonal shift completions or not. Only for --gcg-push flag.')
+    return parser.parse_args(argv)
+
+
+parse_arguments = parse_args
 
 
 def chunk_path(path: str, chunk_id: int) -> str:
-    directory, filename = os.path.split(path)
-    evaluation_chunk = os.path.join(directory, 'evaluation_chunks', f'chunk_{chunk_id:05d}.json')
-    if os.path.exists(evaluation_chunk):
-        return evaluation_chunk
-    legacy_chunk = os.path.join(directory, f'{chunk_id}_{filename}')
-    if os.path.exists(legacy_chunk):
-        return legacy_chunk
-    generation_chunk = os.path.join(directory, 'generation_chunks', f'chunk_{chunk_id:05d}.json')
-    if os.path.exists(generation_chunk):
-        raise FileNotFoundError(
-            f'Found generation chunk {generation_chunk}, but evaluation reads temporary evaluation_chunks/. '
-            'Run tools/combine_completions.py to re-shard generation chunks for evaluation.'
-        )
-    canonical_chunk = os.path.join(directory, 'chunks', f'chunk_{chunk_id:05d}.json')
-    if os.path.exists(canonical_chunk):
-        raise FileNotFoundError(
-            f'Found canonical chunk {canonical_chunk}, but evaluation reads temporary evaluation_chunks/. '
-            'Create evaluation_chunks/ before running the jailbreak judge.'
-        )
-    raise FileNotFoundError(f'No evaluation chunk found for chunk_id={chunk_id} under {directory}')
-
-
-def _populated(value):
-    if value is None:
-        return False
-    try:
-        if pd.isna(value):
-            return False
-    except (TypeError, ValueError):
-        pass
-    return not (isinstance(value, str) and value.strip() == '')
-
-
-def assert_column_populated(df, column: str, path: str):
-    if column not in df.columns:
-        raise ValueError(f'{path} is missing required column {column!r}')
-    missing = sum(not _populated(value) for value in df[column].tolist())
-    print(f'{column}: {len(df) - missing}/{len(df)} populated in {path}')
-    if missing:
-        raise RuntimeError(f'{missing} records in {path} are missing {column!r}')
+    return workflow_chunk_path(path, chunk_id, 'evaluation')
 
 def evaluate_generations(jailbreak_judge, data_path, batch_size=100, chunk_id=None):
     if chunk_id is not None:
@@ -77,6 +42,8 @@ def evaluate_generations(jailbreak_judge, data_path, batch_size=100, chunk_id=No
     if 'jailbroken' not in generations_df.columns:
         generations_df['jailbroken'] = None
         generations_df.to_json(data_path, orient='records', indent=4)
+    else:
+        generations_df['jailbroken'] = generations_df['jailbroken'].map(to_bool).astype(object)
 
     start = generations_df['jailbroken'].notna().sum()
     print(f"Resuming at index {start}/{n}")
@@ -94,8 +61,8 @@ def evaluate_generations(jailbreak_judge, data_path, batch_size=100, chunk_id=No
 
     assert_column_populated(generations_df, 'jailbroken', data_path)
 
-if __name__ == "__main__":
-    args = parse_arguments()
+def main(argv=None):
+    args = parse_args(argv)
     cfg = Config(model_path=args.model_path)
     from pipeline.submodules.jailbreak_judge import Llama3JailbreakJudge
     jailbreak_judge = Llama3JailbreakJudge(num_gpus=args.num_gpus)
@@ -129,3 +96,7 @@ if __name__ == "__main__":
         print("Evaluating cross prompt transfer generations")
         # Evaluate cross prompt transfer generations
         evaluate_generations(jailbreak_judge, data_path=cfg.cross_prompt_transfer_generations_path(), chunk_id=None)
+
+
+if __name__ == "__main__":
+    main()

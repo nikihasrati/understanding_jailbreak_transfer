@@ -5,13 +5,13 @@ import pandas as pd
 
 from pipeline.config import Config
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Set up data sets for cross-model analysis.')
-    parser.add_argument('--source_model_path', type=str, required=True, help='Path to the source model')
-    parser.add_argument('--target_model_path', type=str, required=True, help='Path to the target model')
+    parser.add_argument('--source-model-path', '--source_model_path', dest='source_model_path', type=str, required=True, help='Path to the source model')
+    parser.add_argument('--target-model-path', '--target_model_path', dest='target_model_path', type=str, required=True, help='Path to the target model')
     parser.add_argument('--generations', action=argparse.BooleanOptionalAction, help='Whether to check for missing generations.')
     parser.add_argument('--evaluations', action=argparse.BooleanOptionalAction, help='Whether to check for missing evaluations.')
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 def check_missing_generations(df):
     print('Number of generations ', len(df['response']))
@@ -27,8 +27,8 @@ def check_missing_evaluations(df):
     print("Indices with null values in 'jailbroken':", null_indices)
     return df['jailbroken'].isna().any()
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     source_cfg = Config(model_path=args.source_model_path)
     target_cfg = Config(model_path=args.target_model_path)
 

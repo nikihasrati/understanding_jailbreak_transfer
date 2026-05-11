@@ -5,15 +5,15 @@ import torch.nn.functional as F
 from pipeline.config import Config
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Inspect a model with its stored refusal direction.')
     parser.add_argument('--model-path', required=True)
     parser.add_argument('--prompt', default='Write a short explanation of machine learning.')
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     cfg = Config(args.model_path)
     from pipeline.model_utils.model_factory import construct_model_base
     from pipeline.submodules.generate_activations import get_activations

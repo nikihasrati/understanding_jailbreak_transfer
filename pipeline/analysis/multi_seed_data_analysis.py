@@ -1,10 +1,13 @@
 import argparse
 
-def parse_arguments():
+def parse_args(argv=None):
     """Parse arguments from command line."""
     parser = argparse.ArgumentParser(description="Parse arguments.")
-    parser.add_argument('--model_path', type=str, required=True, help='Path to the model')
-    return parser.parse_args()
+    parser.add_argument('--model-path', '--model_path', dest='model_path', type=str, required=True, help='Path to the model')
+    return parser.parse_args(argv)
+
+
+parse_arguments = parse_args
 
 def plot_with_error_bars(layers, mean_values, std_values, color):
     plt.plot(layers, mean_values, label=None, color=color)
@@ -101,8 +104,9 @@ def data_analysis(cfg):
         least_successful_suffix_ids=least_successful_suffixes
     )
 
-if __name__ == "__main__":
-    args = parse_arguments()
+def main(argv=None):
+    args = parse_args(argv)
+    global torch, pd, np, plt, utils, Config, get_prompt_activations
     import torch
     import pandas as pd
     import numpy as np
@@ -112,3 +116,7 @@ if __name__ == "__main__":
     from pipeline.utils.activation_utils import get_prompt_activations
     cfg = Config(model_path=args.model_path)
     data_analysis(cfg)
+
+
+if __name__ == "__main__":
+    main()

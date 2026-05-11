@@ -1,27 +1,20 @@
 import argparse
-import hashlib
 import json
 from pathlib import Path
 
-
-def sha256_file(path):
-    h = hashlib.sha256()
-    with open(path, 'rb') as f:
-        for block in iter(lambda: f.read(1024 * 1024), b''):
-            h.update(block)
-    return h.hexdigest()
+from pipeline.artifacts import sha256_file
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Create a simple manifest for files under a directory.')
     parser.add_argument('--root', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--artifact-format', default='file_manifest')
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     root = Path(args.root)
     output = Path(args.output)
     files = []

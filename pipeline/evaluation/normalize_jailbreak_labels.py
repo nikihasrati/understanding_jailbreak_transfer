@@ -1,18 +1,25 @@
 import argparse
-import os
 
 import pandas as pd
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Normalize jailbreak labels to booleans in a JSON generations file.')
     parser.add_argument('--path', required=True)
+    parser.add_argument('--output', default=None, help='Output JSON path. Defaults to overwriting --path.')
     parser.add_argument('--column', default='jailbroken')
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def to_bool(value):
-    if isinstance(value, bool) or value is None:
+    if value is None:
+        return value
+    try:
+        if pd.isna(value):
+            return None
+    except (TypeError, ValueError):
+        pass
+    if isinstance(value, bool):
         return value
     if isinstance(value, (int, float)):
         return bool(value)
@@ -24,13 +31,13 @@ def to_bool(value):
     return value
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     df = pd.read_json(args.path)
     if args.column not in df.columns:
         raise KeyError(args.column)
     df[args.column] = df[args.column].map(to_bool)
-    df.to_json(args.path, orient='records', indent=2)
+    df.to_json(args.output or args.path, orient='records', indent=2)
 
 
 if __name__ == '__main__':

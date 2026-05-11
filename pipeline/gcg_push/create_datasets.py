@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
+from pipeline.artifacts import write_json_chunks
 from pipeline.gcg_push import config as gcg_config
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Create chunked GCG-push artifacts from raw coefficient-modified GCG runs.')
     parser.add_argument('--config', default=str(gcg_config.DEFAULT_CONFIG))
     parser.add_argument('--intervention', choices=['suffix_push', 'orth_shift'], default=None)
@@ -20,15 +20,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--artifact-root', default=None)
     parser.add_argument('--check', action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument('--strict', action=argparse.BooleanOptionalAction, default=False)
-    return parser.parse_args()
-
-
-def sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open('rb') as f:
-        for block in iter(lambda: f.read(1024 * 1024), b''):
-            h.update(block)
-    return h.hexdigest()
+    return parser.parse_args(argv)
 
 
 def raw_result_path(config: dict[str, Any], intervention: str, coeff: str, index: int, seed: int, raw_root: Path | None) -> Path:
@@ -99,25 +91,9 @@ def create_transfer_dataset(no_transfer_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def write_chunked_json(records: list[dict[str, Any]], artifact_path: Path, num_chunks: int, source: str, metadata: dict[str, Any]) -> None:
-    chunks_dir = artifact_path / 'chunks'
-    chunks_dir.mkdir(parents=True, exist_ok=True)
-    for stale in chunks_dir.glob('chunk_*.json'):
-        stale.unlink()
     if num_chunks < 1:
         raise ValueError('num_chunks must be >= 1')
-    chunk_size = len(records) // num_chunks
-    chunks = []
-    for chunk_id in range(num_chunks):
-        start = chunk_id * chunk_size
-        end = (chunk_id + 1) * chunk_size if chunk_id != num_chunks - 1 else len(records)
-        path = chunks_dir / f'chunk_{chunk_id:05d}.json'
-        path.write_text(json.dumps(records[start:end], separators=(',', ':')) + '\n')
-        chunks.append({
-            'path': str(path.relative_to(artifact_path)),
-            'records': end - start,
-            'bytes': path.stat().st_size,
-            'sha256': sha256_file(path),
-        })
+    chunks = write_json_chunks(records, artifact_path / 'chunks', num_chunks, artifact_dir=artifact_path)
     manifest = {
         'artifact_format': 'chunked_json',
         'source': source,
@@ -184,8 +160,8 @@ def process_one(config: dict[str, Any], intervention: str, coeff: str, args: arg
     )
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv=None) -> None:
+    args = parse_args(argv)
     config = gcg_config.load_config(args.config)
     for intervention in gcg_config.selected_interventions(config, args.intervention):
         for coeff in gcg_config.selected_coefficients(config, intervention, args.coeff):

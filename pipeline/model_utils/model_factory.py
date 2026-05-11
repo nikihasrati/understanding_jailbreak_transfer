@@ -19,4 +19,4 @@ def construct_model_base(model_path: str) -> ModelBase:
     if 'phi-3' in model_path.lower():
         from pipeline.model_utils.models.phi3_model import Phi3Model
         return Phi3Model(model_path)
-        return DeepseekModel(model_path)
+    raise ValueError(f'Unsupported model path: {model_path}')

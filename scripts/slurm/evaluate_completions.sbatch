@@ -7,7 +7,7 @@
 
 MODEL_PATH=${1:?model path required}
 MODEL_CACHE_ROOT=${2:?model cache root required}
-FLAG_TYPE=${3:-multi_seed}
+FLAG_TYPE=${3:-multi-seed}
 CHUNK_ID=${SLURM_ARRAY_TASK_ID}
 NUM_GPUS=${NUM_GPUS:-4}
 
@@ -16,4 +16,4 @@ export TRANSFORMERS_CACHE="$HF_HOME/hub"
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export NCCL_P2P_DISABLE=1
 
-python -m pipeline.evaluation.evaluate_completions   --model_path "$MODEL_PATH"   --"$FLAG_TYPE"   --chunk_id "$CHUNK_ID"   --num_gpus "$NUM_GPUS"
+python -m pipeline completions evaluate   --model-path "$MODEL_PATH"   --"$FLAG_TYPE"   --chunk-id "$CHUNK_ID"   --num-gpus "$NUM_GPUS"

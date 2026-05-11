@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Create and check multi-seed datasets from raw GCG results.')
     parser.add_argument('--model-path', required=True)
     parser.add_argument('--results-dir', default='data/gcg_results/raw')
@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument('--expected-prompts', type=int, default=100)
     parser.add_argument('--expected-seeds', type=int, default=100)
     parser.add_argument('--check', action=argparse.BooleanOptionalAction, default=True)
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def model_alias(model_path: str) -> str:
@@ -62,8 +62,8 @@ def check_dataset(df: pd.DataFrame, expected_prompts: int, expected_seeds: int) 
     print(f'Prompt IDs without {expected_seeds} distinct seeds: {missing}')
 
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     alias = model_alias(args.model_path)
     raw_model_dir = Path(args.results_dir) / os.path.basename(args.model_path)
     if not raw_model_dir.exists():

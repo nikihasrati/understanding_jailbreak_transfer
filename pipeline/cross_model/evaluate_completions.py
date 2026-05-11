@@ -5,41 +5,34 @@ import pandas as pd
 
 from tqdm import tqdm
 
+from pipeline.artifacts import assert_column_populated, workflow_chunk_path
 from pipeline.config import Config
+from pipeline.evaluation.normalize_jailbreak_labels import to_bool
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Set up data sets for cross-model analysis.')
-    parser.add_argument('--source_model_path', type=str, required=True, help='Path to the source model')
-    parser.add_argument('--target_model_path', type=str, required=True, help='Path to the target model')
-    parser.add_argument('--chunk_id', type=int, required=True, help='Chunk ID to process')
-    parser.add_argument('--num_gpus', type=int, required=False, help='The number of GPUs available')
-    return parser.parse_args()
+    parser.add_argument('--source-model-path', '--source_model_path', dest='source_model_path', type=str, required=True, help='Path to the source model')
+    parser.add_argument('--target-model-path', '--target_model_path', dest='target_model_path', type=str, required=True, help='Path to the target model')
+    parser.add_argument('--chunk-id', '--chunk_id', dest='chunk_id', type=int, required=True, help='Chunk ID to process')
+    parser.add_argument('--num-gpus', '--num_gpus', dest='num_gpus', type=int, required=False, help='The number of GPUs available')
+    return parser.parse_args(argv)
 
 def evaluate_completions(jailbreak_judge, source_cfg, target_cfg, chunk_id, batch_size=100):
     print("Chunk ID", chunk_id)
 
     save_dir = os.path.join(target_cfg.cross_model_transfer_generations_dir(), f'{source_cfg.model_alias}_to_{target_cfg.model_alias}')
-    eval_chunk = os.path.join(save_dir, 'evaluation_chunks', f'chunk_{chunk_id:05d}.json')
-    if os.path.exists(eval_chunk):
-        save_path = eval_chunk
-    else:
-        generation_chunk = os.path.join(save_dir, 'generation_chunks', f'chunk_{chunk_id:05d}.json')
-        if os.path.exists(generation_chunk):
-            raise FileNotFoundError('Found generation_chunks, but cross-model evaluation expects evaluation_chunks. Run tools/combine_completions.py first.')
-        file_name = f'{chunk_id}_cross_model_transfer_generations.json'
-        save_path = os.path.join(save_dir, file_name)
+    save_path = workflow_chunk_path(os.path.join(save_dir, 'cross_model_transfer_generations.json'), chunk_id, 'evaluation')
 
     chunk_df = pd.read_json(save_path)
     n = len(chunk_df)
 
-    missing_responses = chunk_df['response'].isna().sum() + (chunk_df['response'].astype(str).str.strip() == '').sum()
-    print(f"response: {len(chunk_df) - missing_responses}/{len(chunk_df)} populated in {save_path}")
-    if missing_responses:
-        raise RuntimeError(f"{missing_responses} records in {save_path} are missing response")
+    assert_column_populated(chunk_df, 'response', save_path)
 
     if 'jailbroken' not in chunk_df.columns:
         chunk_df['jailbroken'] = None
         chunk_df.to_json(save_path, orient='records', indent=4)
+    else:
+        chunk_df['jailbroken'] = chunk_df['jailbroken'].map(to_bool).astype(object)
 
     # Start from the first index where response is not None
     start = chunk_df['jailbroken'].notna().sum()
@@ -56,13 +49,10 @@ def evaluate_completions(jailbreak_judge, source_cfg, target_cfg, chunk_id, batc
 
         chunk_df.to_json(save_path, orient='records', indent=4)
 
-    missing_evals = chunk_df['jailbroken'].isna().sum()
-    print(f"jailbroken: {len(chunk_df) - missing_evals}/{len(chunk_df)} populated in {save_path}")
-    if missing_evals:
-        raise RuntimeError(f"{missing_evals} records in {save_path} are missing jailbroken")
+    assert_column_populated(chunk_df, 'jailbroken', save_path)
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    args = parse_args(argv)
     source_cfg = Config(model_path=args.source_model_path)
     target_cfg = Config(model_path=args.target_model_path)
     

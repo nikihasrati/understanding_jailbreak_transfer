@@ -1,40 +1,29 @@
 from __future__ import annotations
 
 import argparse
-import json
-import math
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
+from pipeline.artifacts import load_json_records, load_manifest_records, populated
 from pipeline.gcg_push import config as gcg_config
 
 
-def parse_arguments() -> argparse.Namespace:
+def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Analyze GCG-push artifacts across interventions and coefficients.')
     parser.add_argument('--config', default=str(gcg_config.DEFAULT_CONFIG))
     parser.add_argument('--model_path', '--model-path', dest='model_path', default=None, help='Optional legacy override for the model path.')
     parser.add_argument('--coeff', default=None, help='Optional single coefficient to analyze.')
     parser.add_argument('--intervention', choices=['suffix_push', 'orth_shift'], default=None, help='Optional single intervention to analyze.')
-    parser.add_argument('--suffix_push', action=argparse.BooleanOptionalAction, help='Analyze only suffix-push results.')
-    parser.add_argument('--orth_shift', action=argparse.BooleanOptionalAction, help='Analyze only orthogonal-shift results.')
+    parser.add_argument('--suffix-push', '--suffix_push', dest='suffix_push', action=argparse.BooleanOptionalAction, help='Analyze only suffix-push results.')
+    parser.add_argument('--orth-shift', '--orth_shift', dest='orth_shift', action=argparse.BooleanOptionalAction, help='Analyze only orthogonal-shift results.')
     parser.add_argument('--output-dir', default='outputs/gcg_push_analysis')
     parser.add_argument('--no-save', action='store_true', help='Print results without writing output files.')
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def load_manifest_records(manifest_path: Path) -> list[dict[str, Any]]:
-    manifest = json.loads(manifest_path.read_text())
-    root = manifest_path.parent
-    records: list[dict[str, Any]] = []
-    for chunk in manifest['chunks']:
-        data = json.loads((root / chunk['path']).read_text())
-        if isinstance(data, list):
-            records.extend(data)
-        else:
-            records.append(data)
-    return records
+parse_arguments = parse_args
 
 
 def load_artifact_df(artifact_dir: Path) -> pd.DataFrame:
@@ -42,25 +31,18 @@ def load_artifact_df(artifact_dir: Path) -> pd.DataFrame:
     if not manifest.exists():
         combined = artifact_dir / 'combined.json'
         if combined.exists():
-            return pd.read_json(combined)
+            return pd.DataFrame(load_json_records(combined))
         raise FileNotFoundError(f'No manifest.json or combined.json found in {artifact_dir}')
-    return pd.DataFrame(load_manifest_records(manifest))
+    _, records = load_manifest_records(manifest)
+    return pd.DataFrame(records)
 
 
 def load_manifest_tree(root: Path) -> pd.DataFrame:
     manifests = sorted(path for path in root.rglob('manifest.json') if 'generation_chunks' not in path.parts and 'evaluation_chunks' not in path.parts)
     if not manifests:
         raise FileNotFoundError(f'No manifest.json files found under {root}')
-    frames = [pd.DataFrame(load_manifest_records(path)) for path in manifests]
+    frames = [pd.DataFrame(load_manifest_records(path)[1]) for path in manifests]
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-
-
-def populated(value: Any) -> bool:
-    if value is None:
-        return False
-    if isinstance(value, float) and math.isnan(value):
-        return False
-    return not (isinstance(value, str) and value.strip() == '')
 
 
 def bool_series(series: pd.Series) -> pd.Series:
@@ -152,8 +134,8 @@ def print_table(df: pd.DataFrame) -> None:
     print(table.to_string(index=False))
 
 
-def main() -> None:
-    args = parse_arguments()
+def main(argv=None) -> None:
+    args = parse_args(argv)
     config = gcg_config.load_config(args.config)
     if args.model_path:
         config.setdefault('experiment', {})['model_id'] = args.model_path
