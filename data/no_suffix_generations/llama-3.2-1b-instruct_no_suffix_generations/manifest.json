@@ -1,0 +1,17 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "no_suffix_generations/llama-3.2-1b-instruct_no_suffix_generations.json",
+  "original_bytes": 30260,
+  "original_sha256": "c60e0970740435d659ec86dfec11d5481db0fc859a80d74a291d15c3eb4de3fb",
+  "top_level": "array",
+  "total_records": 100,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 100,
+      "bytes": 25639,
+      "sha256": "f22b976eb5a67b8dd18bd14bf6f1bdb9f5dfe1473341fd6e871acc031aa9e26b"
+    }
+  ]
+}

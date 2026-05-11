@@ -1,0 +1,17 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "processed/jailbreakbench_prompts/prompts.json",
+  "original_bytes": 18242,
+  "original_sha256": "1f2ce5e62b7b5325a06f880dfdfaa3965378459f5dd9d888103a38fc2033ec8f",
+  "top_level": "array",
+  "total_records": 100,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 100,
+      "bytes": 14502,
+      "sha256": "98ac739fe65e1d095d78eba3958bdd75c640ef52c50b9e62e71e1514615affd1"
+    }
+  ]
+}

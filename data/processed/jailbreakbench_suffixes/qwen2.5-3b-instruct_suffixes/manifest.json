@@ -1,0 +1,17 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "processed/jailbreakbench_suffixes/qwen2.5-3b-instruct_suffixes.json",
+  "original_bytes": 19248,
+  "original_sha256": "d7ed17598b20190b8d7016a5a1cc8a41375e42be598c359a777aba89d05fde43",
+  "top_level": "array",
+  "total_records": 100,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 100,
+      "bytes": 15526,
+      "sha256": "7d1c11b5a330118e459078a0433cbcf177a392910f87c163feb88f7582c4f104"
+    }
+  ]
+}

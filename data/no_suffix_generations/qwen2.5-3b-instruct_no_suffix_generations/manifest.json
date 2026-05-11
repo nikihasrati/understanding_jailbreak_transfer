@@ -1,0 +1,17 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "no_suffix_generations/qwen2.5-3b-instruct_no_suffix_generations.json",
+  "original_bytes": 88477,
+  "original_sha256": "75f828918604b39ea32ae3b98d97ce916b6802e1f6bdcfa85841bd21ad7e1746",
+  "top_level": "array",
+  "total_records": 100,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 100,
+      "bytes": 83792,
+      "sha256": "6875f6cc582aa8d6beaac9eb0d589b0ca868b75b4355a8e47a71c8eaa4d76884"
+    }
+  ]
+}

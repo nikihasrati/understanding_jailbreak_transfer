@@ -1,0 +1,17 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "raw/jailbreakbench/llama-2-7b-chat-hf.json",
+  "original_bytes": 141247,
+  "original_sha256": "f76cbaf899c79ca8eed6a6ed26d6f8789933c5595a9a5ee028e305dec4dd95f7",
+  "top_level": "dict",
+  "total_records": 1,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 1,
+      "bytes": 122290,
+      "sha256": "91cece5e253f3317ef24473d40119a5bbff4ef9c06d2f63ae34d7d42a1070128"
+    }
+  ]
+}

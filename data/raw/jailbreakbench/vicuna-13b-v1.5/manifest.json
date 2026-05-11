@@ -1,0 +1,17 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "raw/jailbreakbench/vicuna-13b-v1.5.json",
+  "original_bytes": 134533,
+  "original_sha256": "9eff8b6f78cae002737868ca8cdd886be5afcd1cbbbe4cf51ff837bc688b01b1",
+  "top_level": "dict",
+  "total_records": 1,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 1,
+      "bytes": 115572,
+      "sha256": "a1980bc074764e110e2e012a26eeb6bc0fbbd76ee96e1354223d657579072482"
+    }
+  ]
+}

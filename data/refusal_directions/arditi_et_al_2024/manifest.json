@@ -1,0 +1,75 @@
+{
+  "artifact_format": "file_manifest",
+  "files": [
+    {
+      "path": "deepseek-r1-distill-qwen-1.5b/direction.pt",
+      "bytes": 1033382,
+      "sha256": "b0752f5c22f1656ad1a7b9bb1f8daf07bebd0aceaaa7ce0e697e46c9c35d150e"
+    },
+    {
+      "path": "deepseek-r1-distill-qwen-1.5b/direction_metadata.json",
+      "bytes": 34,
+      "sha256": "3a64cd08787e70518996a0b04eb4bdd90c9d13de0655e257ac6327f4b3ca7886"
+    },
+    {
+      "path": "llama-2-7b-chat-hf/direction.pt",
+      "bytes": 6292646,
+      "sha256": "e416f4e7f4bfa77731accd18d250b543a9017ae04cc05a9e00d3ea97204637b4"
+    },
+    {
+      "path": "llama-2-7b-chat-hf/direction_metadata.json",
+      "bytes": 34,
+      "sha256": "4ecc2ee310089fbe91ef5b8794be101bf764cecc368f2641324335f6409b976b"
+    },
+    {
+      "path": "llama-3.2-1b-instruct/direction.pt",
+      "bytes": 1311910,
+      "sha256": "4eb435ddfa143114d986e94d9645cae7d4f98163c229f1de079609406a1ace93"
+    },
+    {
+      "path": "llama-3.2-1b-instruct/direction_metadata.json",
+      "bytes": 33,
+      "sha256": "0e46213f06547aafb00c83b485fc83a845cf6517f4f1e6ed2e636db334b786ee"
+    },
+    {
+      "path": "phi-3-mini-4k-instruct/direction.pt",
+      "bytes": 1574054,
+      "sha256": "18c1e53e759ad224b100870ded30e4718de285b30b4cd8501af19be828cd1e65"
+    },
+    {
+      "path": "phi-3-mini-4k-instruct/direction_metadata.json",
+      "bytes": 34,
+      "sha256": "ba68fc6a33a06d5632687a2fae07ee82ba0e009b9efee88e3f98aaaf70744704"
+    },
+    {
+      "path": "qwen-1_8b-chat/direction.pt",
+      "bytes": 1967270,
+      "sha256": "0a425469150ddc9145044c4ae3cf19c773c999bf0e115435dc2b98d7b75cf117"
+    },
+    {
+      "path": "qwen-1_8b-chat/direction_metadata.json",
+      "bytes": 34,
+      "sha256": "1b167d48078bd75fffca4feac0cd10aa1fd5da06a306909d47b5a6f14ac86754"
+    },
+    {
+      "path": "qwen2.5-3b-instruct/direction.pt",
+      "bytes": 2950310,
+      "sha256": "8566638533873653b0a8f43a6dc5284cce244ccb8f46917208064b468ac988ea"
+    },
+    {
+      "path": "qwen2.5-3b-instruct/direction_metadata.json",
+      "bytes": 34,
+      "sha256": "04da558c719419fbef53082539ee7c754b0fdb883c2626749eaff381ee465860"
+    },
+    {
+      "path": "vicuna-13b-v1.5/direction.pt",
+      "bytes": 14746790,
+      "sha256": "d350a00a3a08946a41c49f809dfd48765c270c3c7ec1caaa69b51c230535259c"
+    },
+    {
+      "path": "vicuna-13b-v1.5/direction_metadata.json",
+      "bytes": 34,
+      "sha256": "4da7b7ad7344faf27c68a33138227523d9d6e4a1e4cb6ef174cdb665f150124f"
+    }
+  ]
+}
