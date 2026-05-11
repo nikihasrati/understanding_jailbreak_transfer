@@ -1,0 +1,54 @@
+# Paper GCG-push experiment configuration.
+# This file is intentionally free of personal paths and emails. Copy it and
+# adjust paths/slurm values for your cluster before launching jobs.
+experiment:
+  name: 20_random_indices
+  model_id: meta-llama/Llama-3.2-1B-Instruct
+  model_alias: llama-3.2-1b-instruct
+  indices_file: configs/gcg_push_20_random_indices.txt
+  num_steps: 500
+
+paths:
+  raw_results_root: outputs/gcg_push/raw
+  artifact_root: data/gcg_push_results
+  refusal_direction_path: data/refusal_directions/arditi_et_al_2024/llama-3.2-1b-instruct/direction.pt
+
+# These are the coefficients used for the paper's altered-GCG intervention.
+# suffix_push used 100 seeds per selected prompt; orth_shift used 5 seeds per
+# selected prompt in the published artifacts.
+interventions:
+  suffix_push:
+    loss_type: mse
+    coefficients: [1e-05, 0.0001, 0.001, 0.01, 0.1, 0.5]
+    seeds:
+      start: 0
+      end: 99
+    artifacts:
+      no_transfer_chunks: 1
+      transfer_chunks: 8
+    workflow:
+      generation_chunks: 8
+      evaluation_chunks: 2
+  orth_shift:
+    loss_type: mse
+    coefficients: [1e-05, 0.0001, 0.001, 0.01, 0.1, 0.5]
+    seeds:
+      start: 0
+      end: 4
+    artifacts:
+      no_transfer_chunks: 1
+      transfer_chunks: 1
+    workflow:
+      generation_chunks: 1
+      evaluation_chunks: 1
+
+slurm:
+  partition: general
+  gpus_per_task: 1
+  judge_gpus_per_task: 4
+  cpus_per_task: 1
+  mem: 50G
+  time: "48:00:00"
+  max_parallel_tasks: 32
+  model_cache_root: /path/to/model/cache/root
+  logs_dir: logs/slurm/gcg_push

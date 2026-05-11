@@ -1,0 +1,92 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "data/gcg_push_results/llama-3.2-1b-instruct/suffix_push/coeff-0.5/transfer",
+  "original_bytes": 31508704,
+  "original_sha256": "ee9a316965248a1ac7017a94f945aad9857d93d4361ece785b3936e6c4a6a1a0",
+  "top_level": "array",
+  "total_records": 40000,
+  "total_chunks": 8,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 3048261,
+      "sha256": "e91d575c187c625a5aaef62f0464a70eddc9f82e47d7a11cc1f4f599e7e10372"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 3398685,
+      "sha256": "e41bef9d166996ceac45402438cd837dac418a461fded0e3583e62ee8606b61b"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 3292200,
+      "sha256": "8d8e7d4404de514f5f2146e6b8469497b7289a9c5eecd445d90a1a8b4cc66059"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 3218982,
+      "sha256": "c17e7c0ed30638cb6a296a9f584dacfae0b34224051f4b747b95263bd2adcca8"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 2947110,
+      "sha256": "a394675fc28fafb793b0ac3ffeb0730827c06474851933a8b5f5ebbbf59f7fb4"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 2801670,
+      "sha256": "26adc916d511714ad96dd12505a1df4f63224df9fdd54dc2108db24082c7e14e"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 5000,
+      "bytes": 4294560,
+      "sha256": "44d40c997bb5c9a937456da75c76425f74b80a64a57def54cc25b6b53d5482ab"
+    },
+    {
+      "path": "chunks/chunk_00007.json",
+      "records": 5000,
+      "bytes": 3965196,
+      "sha256": "1b8eae37715b1b945e478e25c00d947ae9253d27da2092de02a1516a596ed9c3"
+    }
+  ],
+  "metadata": {
+    "model_alias": "llama-3.2-1b-instruct",
+    "model_id": "meta-llama/Llama-3.2-1B-Instruct",
+    "experiment": "20_random_indices",
+    "intervention": "suffix_push",
+    "coeff": "0.5",
+    "split": "transfer",
+    "indices": [
+      5,
+      9,
+      11,
+      17,
+      24,
+      27,
+      36,
+      37,
+      42,
+      43,
+      50,
+      58,
+      60,
+      64,
+      70,
+      73,
+      84,
+      89,
+      92,
+      97
+    ],
+    "seed_start": 0,
+    "seed_end": 99,
+    "num_steps": 500
+  }
+}

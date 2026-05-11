@@ -29,3 +29,28 @@ The old repositories were treated as read-only sources. This repo is the consoli
 - BERT prompt embedding scripts.
 - Activation tensor artifacts.
 - Slurm logs, symlinks, job summaries, virtual environments, caches, and personal launch wrappers.
+
+## GCG-Push Consolidation
+
+The old local `gcg-push` repo was treated as read-only. The reproducible pieces were consolidated into the new repo as follows:
+
+```text
+gcg-push/gcg.py
+  -> pipeline/gcg_push/run_gcg.py
+  -> pipeline/gcg_push/gcg_adapted.py
+
+gcg-push/setup_datasets.py + check_suffixes.py
+  -> pipeline/gcg_push/create_datasets.py
+
+gcg-push/20_random_indices.txt
+  -> configs/gcg_push_20_random_indices.txt
+
+gcg-push/scripts/* and launch_job*.sh
+  -> configs/gcg_push_paper.example.yaml
+  -> pipeline/gcg_push/launch_experiment.py
+
+gcg-push/processed_datasets and evaluated results used by the paper
+  -> data/gcg_push_results/<model>/<intervention>/coeff-<coefficient>/<split>/manifest.json + chunks/
+```
+
+Slurm logs, personal script folders, and old machine-specific paths were intentionally not migrated. The new config file uses placeholders for cluster-specific settings and avoids personal names or email addresses.

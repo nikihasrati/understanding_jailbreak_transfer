@@ -60,14 +60,20 @@ class Config:
     def multi_seed_generations_transfer_dir(self) -> str:
         return os.path.dirname(self.multi_seed_generations_transfer_path())
 
+    def gcg_push_root_dir(self) -> str:
+        return self._path(self.DATASET_DIR, 'gcg_push_results', self.model_alias)
+
+    def gcg_push_artifact_dir(self, intervention: str, coeff: str, split: str = 'transfer') -> str:
+        return self._path(self.gcg_push_root_dir(), intervention, f'coeff-{coeff}', split)
+
     def gcg_push_transfer_dir(self) -> str:
-        return self._path(self.DATASET_DIR, 'gcg_push_results', self.model_alias, 'transfer')
+        return self._path(self.gcg_push_root_dir(), 'transfer')
 
     def gcg_push_orth_shift_transfer_path(self, coeff: str) -> str:
-        return self._path(self.gcg_push_transfer_dir(), f'orth_shift_coeff-{coeff}', f'{self.model_alias}_orth_shift_coeff-{coeff}_multiple_seed_results_transfer', 'combined.json')
+        return self._path(self.gcg_push_artifact_dir('orth_shift', coeff, 'transfer'), 'combined.json')
 
     def gcg_push_suffix_push_transfer_path(self, coeff: str) -> str:
-        return self._path(self.gcg_push_transfer_dir(), f'suffix_push_coeff-{coeff}', f'{self.model_alias}_suffix_push_coeff-{coeff}_multiple_seed_results_transfer', 'combined.json')
+        return self._path(self.gcg_push_artifact_dir('suffix_push', coeff, 'transfer'), 'combined.json')
 
     def activations_dir(self) -> str:
         return self._path(self.repo_root, 'outputs', 'activations')

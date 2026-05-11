@@ -415,24 +415,94 @@ sbatch --partition "$SLURM_PARTITION" --gres=gpu:1 \
 
 **Paper connection:** Section 5.6, "Altered GCG Loss"; Tables 4-5.
 
-GCG-push experiments test the intervention suggested by the statistical analysis: modify the GCG loss so suffixes are encouraged to push away from the refusal direction or move orthogonally to it. Use the same `generation_chunks/ -> evaluation_chunks/ -> chunks/` lifecycle for generated GCG-push artifacts.
-
-The generic Slurm wrappers do not currently pass `--coeff`, `--suffix_push`, or `--orth_shift`, so use `sbatch --wrap` or a site-specific wrapper for these array jobs:
+GCG-push experiments rerun GCG with an added loss term. `suffix_push` encourages suffixes to move away from the refusal direction, while `orth_shift` encourages movement in the component orthogonal to the refusal direction. The paper configuration is stored in `configs/gcg_push_paper.example.yaml`; copy it before editing cluster-specific paths.
 
 ```bash
-sbatch --partition "$SLURM_PARTITION" --gres=gpu:1 --array="${GENERATION_ARRAY_START}-${GENERATION_ARRAY_END}" \
-  --wrap "python -m pipeline.generation.generate_completions --model-path \"$MODEL_ID\" --gcg-push --coeff \"$GCG_PUSH_COEFF\" --orth-shift --chunk-id \"\$SLURM_ARRAY_TASK_ID\" --resume"
-
-sbatch --partition "$SLURM_PARTITION" --gres=gpu:"$NUM_JUDGE_GPUS" --array="${EVALUATION_ARRAY_START}-${EVALUATION_ARRAY_END}" \
-  --wrap "python -m pipeline.evaluation.evaluate_completions --model_path \"$MODEL_ID\" --gcg_push --coeff \"$GCG_PUSH_COEFF\" --orth_shift --chunk_id \"\$SLURM_ARRAY_TASK_ID\" --num_gpus \"$NUM_JUDGE_GPUS\""
-
-sbatch --partition "$SLURM_PARTITION" --gres=gpu:1 \
-  --wrap "python -m pipeline.gcg_push.data_analysis --model_path \"$MODEL_ID\" --coeff \"$GCG_PUSH_COEFF\" --orth_shift"
+cp configs/gcg_push_paper.example.yaml configs/gcg_push_paper.yaml
 ```
 
-Use `--suffix_push` instead of `--orth_shift` for suffix-push experiments.
+Edit `configs/gcg_push_paper.yaml` to set `slurm.partition`, `slurm.model_cache_root`, and, if needed, `slurm.max_parallel_tasks`. With 32 available GPUs, set `slurm.max_parallel_tasks: 32`; this caps each Slurm array at 32 simultaneous one-GPU tasks. If you submit many coefficient arrays at once, the scheduler still decides how many total jobs run, so submit one intervention or coefficient at a time when you need strict control.
 
-**Output:** GCG-push artifacts are saved under `data/gcg_push_results/$MODEL_ALIAS/transfer/{orth_shift_coeff-$GCG_PUSH_COEFF,suffix_push_coeff-$GCG_PUSH_COEFF}/`. Analysis prints ASR comparisons and may save figures under `figures/$MODEL_ALIAS/`.
+Preview the raw altered-GCG jobs without submitting:
+
+```bash
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend slurm \
+  --stage raw
+```
+
+Submit raw altered-GCG jobs after reviewing the printed commands:
+
+```bash
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend slurm \
+  --stage raw \
+  --submit
+```
+
+The raw stage writes one `results.json` per configured prompt index and seed under `outputs/gcg_push/raw/$MODEL_ALIAS/20_random_indices/{suffix_push,orth_shift}/coeff-$COEFF/index-*/seed-*/`. Those raw outputs are ignored by Git and are the reproducible source for the published chunked artifacts.
+
+After the raw Slurm arrays finish, build the chunked no-transfer and transfer artifacts:
+
+```bash
+python -m pipeline.gcg_push.create_datasets \
+  --config configs/gcg_push_paper.yaml \
+  --check \
+  --strict
+```
+
+This writes canonical artifacts to `data/gcg_push_results/$MODEL_ALIAS/{suffix_push,orth_shift}/coeff-$COEFF/{no_transfer,transfer}/chunks/` plus `manifest.json`. The published artifacts in this repo use this same layout.
+
+Generate model responses for the transfer artifacts:
+
+```bash
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend slurm \
+  --stage generation
+
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend slurm \
+  --stage generation \
+  --submit
+```
+
+The generation stage first creates temporary `generation_chunks/`, then submits array jobs that fill the `response` field. After generation jobs finish, run evaluation:
+
+```bash
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend slurm \
+  --stage evaluation
+
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend slurm \
+  --stage evaluation \
+  --submit
+```
+
+The evaluation stage reshards `generation_chunks/` into fewer `evaluation_chunks/` for the multi-GPU jailbreak judge, then submits judge array jobs. After the evaluation arrays finish, promote evaluated records back to canonical published chunks:
+
+```bash
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend slurm \
+  --stage publish \
+  --submit
+```
+
+Finally, compute the full GCG-push summary table across both interventions and all configured coefficients:
+
+```bash
+python -m pipeline.gcg_push.data_analysis \
+  --config configs/gcg_push_paper.yaml
+```
+
+**Output:** Published GCG-push artifacts live under `data/gcg_push_results/$MODEL_ALIAS/{suffix_push,orth_shift}/coeff-$COEFF/{no_transfer,transfer}/`. Temporary `generation_chunks/` and `evaluation_chunks/` are ignored. Analysis writes summaries to `outputs/gcg_push_analysis/` and prints ASR comparisons against the zero-coefficient baseline.
 
 ## 16. Prompt Rephrasings
 

@@ -6,4 +6,4 @@
 - Add optional external artifact hosting for activation tensors if the paper release needs precomputed activations.
 - Normalize CLI option names so every command consistently uses hyphenated long flags while preserving aliases for older scripts.
 - Update multi-seed and cross-model loaders to read manifest-backed `chunks/` directly instead of requiring temporary `combined.json` files, including for `no_transfer` artifacts.
-- Keep GCG-push `no_transfer` outputs as regeneration intermediates rather than published artifacts unless a future downstream analysis explicitly needs them.
+- Decide whether future releases should keep GCG-push `no_transfer` artifacts in Git or regenerate them only as intermediates before publishing `transfer` artifacts.

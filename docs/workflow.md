@@ -425,34 +425,65 @@ python -m pipeline.cross_model.data_analysis \
 
 **Paper connection:** Section 5.6, "Altered GCG Loss"; Tables 4-5.
 
-GCG-push experiments test the intervention suggested by the statistical analysis: modify the GCG loss so suffixes are encouraged to push away from the refusal direction or move orthogonally to it. The generation/evaluation flags select coefficient-modified artifacts, and `pipeline.gcg_push.data_analysis` compares the resulting ASR against the zero-coefficient baseline. Use the same `generation_chunks/ -> evaluation_chunks/ -> chunks/` lifecycle for generated GCG-push artifacts.
+The local commands mirror [slurm_workflow.md](slurm_workflow.md), but full paper-scale GCG-push runs are not recommended locally. Use this section as the readable local equivalent of the recommended Slurm workflow.
+
+Copy the paper config and edit local paths if needed:
 
 ```bash
-python -m pipeline.generation.generate_completions \
-  --model-path "$MODEL_ID" \
-  --gcg-push \
-  --coeff "$GCG_PUSH_COEFF" \
-  --orth-shift \
-  --chunk-id "$GENERATION_CHUNK_ID" \
-  --resume
-
-python -m pipeline.evaluation.evaluate_completions \
-  --model_path "$MODEL_ID" \
-  --gcg_push \
-  --coeff "$GCG_PUSH_COEFF" \
-  --orth_shift \
-  --chunk_id "$EVALUATION_CHUNK_ID" \
-  --num_gpus "$NUM_JUDGE_GPUS"
-
-python -m pipeline.gcg_push.data_analysis \
-  --model_path "$MODEL_ID" \
-  --coeff "$GCG_PUSH_COEFF" \
-  --orth_shift
+cp configs/gcg_push_paper.example.yaml configs/gcg_push_paper.yaml
 ```
 
-Use `--suffix_push` instead of `--orth_shift` for suffix-push experiments.
+Run the raw altered-GCG jobs for the configured prompt indices and coefficients:
 
-**Output:** GCG-push artifacts are saved under `data/gcg_push_results/$MODEL_ALIAS/transfer/{orth_shift_coeff-$GCG_PUSH_COEFF,suffix_push_coeff-$GCG_PUSH_COEFF}/`. Analysis prints ASR comparisons and may save figures under `figures/$MODEL_ALIAS/`.
+```bash
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend local \
+  --stage raw
+```
+
+The command prints one local command per prompt index, coefficient, and intervention. Running all of them serially is slow; Slurm job arrays are the intended execution method. Raw outputs are saved under `outputs/gcg_push/raw/$MODEL_ALIAS/20_random_indices/{suffix_push,orth_shift}/coeff-$COEFF/index-*/seed-*/results.json`.
+
+Build published chunked artifacts from raw outputs:
+
+```bash
+python -m pipeline.gcg_push.create_datasets \
+  --config configs/gcg_push_paper.yaml \
+  --check \
+  --strict
+```
+
+This writes `data/gcg_push_results/$MODEL_ALIAS/{suffix_push,orth_shift}/coeff-$COEFF/{no_transfer,transfer}/chunks/` and `manifest.json`.
+
+Generate completions, evaluate them, and promote evaluated records back to canonical chunks:
+
+```bash
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend local \
+  --stage generation
+
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend local \
+  --stage evaluation
+
+python -m pipeline.gcg_push.launch_experiment \
+  --config configs/gcg_push_paper.yaml \
+  --backend local \
+  --stage publish
+```
+
+The generation stage creates temporary `generation_chunks/` and fills `response`; the evaluation stage creates `evaluation_chunks/` and fills `jailbroken`; the publish stage validates those fields and rewrites canonical `chunks/` plus `manifest.json`.
+
+Analyze all configured coefficients and interventions:
+
+```bash
+python -m pipeline.gcg_push.data_analysis \
+  --config configs/gcg_push_paper.yaml
+```
+
+**Output:** Published GCG-push artifacts live under `data/gcg_push_results/$MODEL_ALIAS/{suffix_push,orth_shift}/coeff-$COEFF/{no_transfer,transfer}/`. Analysis writes summaries to `outputs/gcg_push_analysis/` and prints ASR comparisons against the zero-coefficient baseline.
 
 ## 16. Prompt Rephrasings
 

@@ -50,7 +50,7 @@ Path shorthand:
 | 11 | Regenerate activations | Sections 3.2-3.3; Sections 5.2-5.5 | `pipeline.activations.save_activations` | Saves ignored tensor chunks under:<br>`outputs/activations/$MODEL_ALIAS/`<br>`<input-kind>/canonical_tensor_chunks/` |
 | 12 | Analyze multi-seed transfer | Sections 5.1-5.5 | `pipeline.analysis.multi_seed_data_analysis` | Prints ASR summaries.<br>Saves figures under:<br>`figures/$MODEL_ALIAS/` |
 | 13 | Analyze cross-model transfer | Section 3.1; Section 5.1; Section 5.5 | `pipeline.cross_model.*` | Saves transfer records under:<br>`data/cross_model_transfer_generations/`<br>`${SOURCE_ALIAS}_to_${TARGET_ALIAS}/`<br>Saves figures under:<br>`figures/${SOURCE_ALIAS}_to_${TARGET_ALIAS}/` |
-| 14 | Analyze GCG-push intervention | Section 5.6; Tables 4-5 | `pipeline.gcg_push.data_analysis`<br>`--gcg-push` generation/evaluation | Saves judged intervention artifacts under:<br>`data/gcg_push_results/$MODEL_ALIAS/transfer/`<br>`{suffix_push_coeff-$COEFF,orth_shift_coeff-$COEFF}/`<br>Analysis prints ASR comparisons. |
+| 14 | Run and analyze GCG-push interventions | Section 5.6; Tables 4-5 | `pipeline.gcg_push.launch_experiment`<br>`pipeline.gcg_push.run_gcg`<br>`pipeline.gcg_push.create_datasets`<br>`pipeline.gcg_push.data_analysis` | Raw rerun outputs:<br>`outputs/gcg_push/raw/$MODEL_ALIAS/`<br>Published artifacts:<br>`data/gcg_push_results/$MODEL_ALIAS/`<br>`{suffix_push,orth_shift}/coeff-$COEFF/`<br>`{no_transfer,transfer}/`<br>Analysis summaries:<br>`outputs/gcg_push_analysis/` |
 | 15 | Analyze prompt rephrasings | Section 5.6; Appendix C | `pipeline.prompt_rephrasings.setup_dataset`<br>`--rephrasings` generation/evaluation | Saves setup dataset to:<br>`data/prompt_rephrasings/`<br>`${MODEL_ALIAS}_prompt_rephrasings/combined.json`<br>Generation/evaluation chunks live under the same artifact directory. |
 
 The recommended command-by-command workflow is in [docs/slurm_workflow.md](docs/slurm_workflow.md). The local-command equivalent is in [docs/workflow.md](docs/workflow.md), but it is provided as an untested reference rather than the primary reproduction path.
@@ -65,12 +65,15 @@ understanding_jailbreak_transfer/
     models.example.yaml             Model IDs used in the experiments.
     paths.example.yaml              Cache/output path placeholders.
     slurm.example.yaml              Cluster setting placeholders.
+    gcg_push_paper.example.yaml     Config-driven GCG-push paper experiment.
+    gcg_push_20_random_indices.txt  Prompt IDs used for the paper GCG-push runs.
   data/                             Versioned artifacts used by the paper workflow.
     processed/                      JailbreakBench prompts and suffixes as chunked JSON.
     multiple_seed_results/          Multi-seed no-transfer and transfer artifacts.
                                       Commit only chunks/ and manifest.json; generation_chunks/,
                                       evaluation_chunks/, and combined.json are temporary.
     gcg_results/raw/                Raw per-prompt/per-seed GCG result JSON files.
+    gcg_push_results/               Coefficient-modified GCG-push artifacts by intervention.
     refusal_directions/             Stored refusal-direction vectors and metadata.
   docs/                             Reproducibility guide and reference docs.
   external/                         Small support files for external repositories.
@@ -82,7 +85,7 @@ understanding_jailbreak_transfer/
     activations/                    Activation regeneration and export utilities.
     analysis/                       Multi-seed analysis.
     cross_model/                    Cross-model setup, generation, evaluation, and analysis.
-    gcg_push/                       GCG-push analysis utilities.
+    gcg_push/                       Config-driven altered-GCG runner, artifact builder, launcher, and analysis.
     prompt_rephrasings/             Prompt-rephrasing dataset setup.
     model_utils/                    Model wrappers used by this repository.
   scripts/                          Local and Slurm convenience wrappers.

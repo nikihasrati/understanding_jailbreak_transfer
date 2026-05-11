@@ -7,6 +7,7 @@ This repository stores JSON artifacts in a manifest-backed chunk format. A manif
 - [Chunk Layout](#chunk-layout)
 - [Canonical vs Working Chunks](#canonical-vs-working-chunks)
 - [Raw GCG Results](#raw-gcg-results)
+- [GCG-Push Artifacts](#gcg-push-artifacts)
 - [Binary Files](#binary-files)
 
 ## Chunk Layout
@@ -97,6 +98,21 @@ data/gcg_results/raw/<model>/index-NNNN/seed-NNNN/results.json
 ```
 
 These files are copied as-is for the v1 release because the current GCG runner writes one file per prompt and seed. Future work is to make GCG write chunked artifacts directly and then migrate the existing raw result tree into that format.
+
+## GCG-Push Artifacts
+
+GCG-push artifacts use the config-driven layout:
+
+```text
+data/gcg_push_results/<model_alias>/<intervention>/coeff-<coefficient>/<split>/
+  manifest.json
+  chunks/
+    chunk_00000.json
+```
+
+`<intervention>` is either `suffix_push` or `orth_shift`. `<split>` is `no_transfer` for the suffixes generated on their source prompts and `transfer` for the cross-product evaluation dataset used by `pipeline.gcg_push.data_analysis`.
+
+The paper configuration is `configs/gcg_push_paper.example.yaml`; it records the 20 prompt indices, coefficients, seed ranges, chunk counts, and Slurm defaults used to regenerate these artifacts. Raw rerun outputs are written to `outputs/gcg_push/raw/` and are converted to the published chunked layout with `pipeline.gcg_push.create_datasets`.
 
 ## Binary Files
 

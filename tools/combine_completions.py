@@ -92,6 +92,10 @@ def write_chunks(records, output_dir: Path, num_chunks: int):
 
 
 def write_manifest(artifact_dir: Path, output_subdir: str, chunks, records, source: str | None):
+    previous = {}
+    previous_path = artifact_dir / 'manifest.json'
+    if previous_path.exists():
+        previous = json.loads(previous_path.read_text())
     rel_chunks = []
     for chunk in chunks:
         path = Path(chunk['path'])
@@ -100,12 +104,14 @@ def write_manifest(artifact_dir: Path, output_subdir: str, chunks, records, sour
         rel_chunks.append(item)
     manifest = {
         'artifact_format': 'chunked_json',
-        'source': source or output_subdir,
+        'source': source or previous.get('source') or output_subdir,
         'top_level': 'array',
         'total_records': len(records),
         'total_chunks': len(rel_chunks),
         'chunks': rel_chunks,
     }
+    if 'metadata' in previous:
+        manifest['metadata'] = previous['metadata']
     (artifact_dir / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
 
 

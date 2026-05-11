@@ -1,113 +1,180 @@
+from __future__ import annotations
+
 import argparse
+import json
+import math
+from pathlib import Path
+from typing import Any
+
 import pandas as pd
-import os
 
-import numpy as np
+from pipeline.gcg_push import config as gcg_config
 
-from pipeline.config import Config
 
-def parse_arguments():
-    """Parse arguments from command line."""
-    parser = argparse.ArgumentParser(description="Parse arguments.")
-    parser.add_argument('--model_path', type=str, required=True, help='Path to the model')
-    parser.add_argument('--coeff', type=str, required=True, help='Coefficient for GCG push completions')
-    parser.add_argument('--suffix_push', action=argparse.BooleanOptionalAction, help='Whether to process suffix push results or not.')
-    parser.add_argument('--orth_shift', action=argparse.BooleanOptionalAction, help='Whether to process orthogonal shift results or not.')
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description='Analyze GCG-push artifacts across interventions and coefficients.')
+    parser.add_argument('--config', default=str(gcg_config.DEFAULT_CONFIG))
+    parser.add_argument('--model_path', '--model-path', dest='model_path', default=None, help='Optional legacy override for the model path.')
+    parser.add_argument('--coeff', default=None, help='Optional single coefficient to analyze.')
+    parser.add_argument('--intervention', choices=['suffix_push', 'orth_shift'], default=None, help='Optional single intervention to analyze.')
+    parser.add_argument('--suffix_push', action=argparse.BooleanOptionalAction, help='Analyze only suffix-push results.')
+    parser.add_argument('--orth_shift', action=argparse.BooleanOptionalAction, help='Analyze only orthogonal-shift results.')
+    parser.add_argument('--output-dir', default='outputs/gcg_push_analysis')
+    parser.add_argument('--no-save', action='store_true', help='Print results without writing output files.')
     return parser.parse_args()
 
-def get_filtered_zero_df(zero_df, coeff_df):
+
+def load_manifest_records(manifest_path: Path) -> list[dict[str, Any]]:
+    manifest = json.loads(manifest_path.read_text())
+    root = manifest_path.parent
+    records: list[dict[str, Any]] = []
+    for chunk in manifest['chunks']:
+        data = json.loads((root / chunk['path']).read_text())
+        if isinstance(data, list):
+            records.extend(data)
+        else:
+            records.append(data)
+    return records
+
+
+def load_artifact_df(artifact_dir: Path) -> pd.DataFrame:
+    manifest = artifact_dir / 'manifest.json'
+    if not manifest.exists():
+        combined = artifact_dir / 'combined.json'
+        if combined.exists():
+            return pd.read_json(combined)
+        raise FileNotFoundError(f'No manifest.json or combined.json found in {artifact_dir}')
+    return pd.DataFrame(load_manifest_records(manifest))
+
+
+def load_manifest_tree(root: Path) -> pd.DataFrame:
+    manifests = sorted(path for path in root.rglob('manifest.json') if 'generation_chunks' not in path.parts and 'evaluation_chunks' not in path.parts)
+    if not manifests:
+        raise FileNotFoundError(f'No manifest.json files found under {root}')
+    frames = [pd.DataFrame(load_manifest_records(path)) for path in manifests]
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
+def populated(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, float) and math.isnan(value):
+        return False
+    return not (isinstance(value, str) and value.strip() == '')
+
+
+def bool_series(series: pd.Series) -> pd.Series:
+    if series.dtype == bool:
+        return series
+    return series.map(lambda value: str(value).strip().lower() in {'true', '1', 'yes'})
+
+
+def get_num_jailbroken(df: pd.DataFrame) -> int:
+    if df.empty or 'jailbroken' not in df.columns:
+        return 0
+    return int(bool_series(df['jailbroken']).sum())
+
+
+def get_asr(df: pd.DataFrame) -> float:
+    return get_num_jailbroken(df) / len(df) if len(df) else 0.0
+
+
+def get_filtered_zero_df(zero_df: pd.DataFrame, coeff_df: pd.DataFrame) -> pd.DataFrame:
     num_prompts = coeff_df['prompt_id'].nunique()
     num_seeds = coeff_df['seed'].nunique()
-    prompts = coeff_df['prompt_id'].unique()
-
-    filtered_df = zero_df[
-        zero_df['prompt_id'].isin(prompts) &
-        zero_df['seed'].isin(range(num_seeds))
-    ]
-
-    # Get the first num_seeds * num_prompts entries for each unique prompt_id
-    filtered_df = filtered_df.groupby('prompt_id').apply(lambda x: x.head(num_seeds * num_prompts)).reset_index(drop=True)
-
-    return filtered_df
-
-def get_num_jailbroken(df):
-    return df['jailbroken'].sum()
-
-def get_asr(df):
-    total_responses = len(df)
-    total_jailbroken = get_num_jailbroken(df)
-    return total_jailbroken / total_responses if total_responses > 0 else 0
-
-def create_df(num_prompts, num_seeds):
-    num_suffixes = num_prompts * num_seeds
-
-    df = pd.DataFrame({
-        'prompt_id': np.repeat(np.arange(num_prompts), num_suffixes),
-        'suffix_id': np.tile(np.arange(num_suffixes), num_prompts)
-    })
-    df['seed'] = df['suffix_id'] % num_seeds
-
-    return df[['prompt_id', 'seed', 'suffix_id']]
-
-def test1_get_zero_asr():
-    big_df = create_df(num_prompts=3, num_seeds=3)
-    small_df = create_df(num_prompts=2, num_seeds=2)
-
-    answer_df = pd.DataFrame({
-        'prompt_id': [0, 0, 0, 0, 1, 1, 1, 1],
-        'seed': [0, 1, 0, 1, 0, 1, 0, 1],
-        'suffix_id': [0, 1, 3, 4, 0, 1, 3, 4]
-    })
-
-    filtered_df = get_filtered_zero_df(big_df, small_df)
-    assert filtered_df.equals(answer_df), "Filtered DataFrame does not match the expected answer DataFrame"
+    prompts = sorted(coeff_df['prompt_id'].unique())
+    seeds = sorted(coeff_df['seed'].unique())
+    filtered_df = zero_df[zero_df['prompt_id'].isin(prompts) & zero_df['seed'].isin(seeds)].copy()
+    rows_per_prompt = num_prompts * num_seeds
+    return filtered_df.groupby('prompt_id', group_keys=False).head(rows_per_prompt).reset_index(drop=True)
 
 
-def test2_get_zero_asr():
-    big_df = create_df(num_prompts=4, num_seeds=5)
-    small_df = create_df(num_prompts=3, num_seeds=2)
+def no_suffix_path(config: dict[str, Any]) -> Path:
+    alias = gcg_config.model_alias(config)
+    return gcg_config.REPO_ROOT / 'data' / 'no_suffix_generations' / f'{alias}_no_suffix_generations'
 
-    answer_df = pd.DataFrame({
-        'prompt_id': [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
-        'seed': [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-        'suffix_id': [0, 1, 5, 6, 10, 11, 0, 1, 5, 6, 10, 11, 0, 1, 5, 6, 10, 11]
-    })
 
-    filtered_df = get_filtered_zero_df(big_df, small_df)
+def baseline_transfer_dir(config: dict[str, Any]) -> Path:
+    return gcg_config.REPO_ROOT / 'data' / 'multiple_seed_results' / gcg_config.model_alias(config) / 'transfer'
 
-    assert filtered_df.equals(answer_df), "Filtered DataFrame does not match the expected answer DataFrame"
 
-if __name__ == "__main__":
-    args = parse_arguments()
-    coeff = args.coeff
-    cfg = Config(model_path=args.model_path)
-    from pipeline.utils import utils
+def analyze_one(config: dict[str, Any], zero_df: pd.DataFrame, no_suffix_df: pd.DataFrame, intervention: str, coeff: str) -> dict[str, Any]:
+    artifact = gcg_config.artifact_dir(config, intervention, coeff, 'transfer')
+    coeff_df = load_artifact_df(artifact)
+    for column in ['response', 'jailbroken']:
+        missing = sum(not populated(value) for value in coeff_df.get(column, pd.Series(dtype=object)).tolist())
+        if missing:
+            raise RuntimeError(f'{artifact} has {missing} records missing {column!r}')
 
-    test1_get_zero_asr()
-    test2_get_zero_asr()
+    filtered_zero = get_filtered_zero_df(zero_df, coeff_df)
+    if len(filtered_zero) != len(coeff_df):
+        raise RuntimeError(
+            f'Filtered zero-coefficient baseline has {len(filtered_zero)} records but {artifact} has {len(coeff_df)} records.'
+        )
+    prompt_ids = set(coeff_df['prompt_id'].unique())
+    filtered_no_suffix = no_suffix_df[no_suffix_df['prompt_id'].isin(prompt_ids)] if not no_suffix_df.empty else pd.DataFrame()
+    return {
+        'model_alias': gcg_config.model_alias(config),
+        'intervention': intervention,
+        'coeff': coeff,
+        'records': len(coeff_df),
+        'prompts': coeff_df['prompt_id'].nunique(),
+        'suffixes': coeff_df['suffix_id'].nunique(),
+        'seeds': coeff_df['seed'].nunique(),
+        'zero_jailbroken': get_num_jailbroken(filtered_zero),
+        'zero_asr': get_asr(filtered_zero),
+        'intervention_jailbroken': get_num_jailbroken(coeff_df),
+        'intervention_asr': get_asr(coeff_df),
+        'delta_asr': get_asr(coeff_df) - get_asr(filtered_zero),
+        'no_suffix_jailbroken': get_num_jailbroken(filtered_no_suffix),
+        'no_suffix_asr': get_asr(filtered_no_suffix),
+    }
 
+
+def selected_intervention(args: argparse.Namespace) -> str | None:
+    flag_selected = None
+    if args.suffix_push and args.orth_shift:
+        raise ValueError('Choose at most one of --suffix_push and --orth_shift.')
     if args.suffix_push:
-        coeff_dir = cfg.gcg_push_suffix_push_transfer_path(coeff)
-    elif args.orth_shift:    
-        coeff_dir = cfg.gcg_push_orth_shift_transfer_path(coeff)
+        flag_selected = 'suffix_push'
+    if args.orth_shift:
+        flag_selected = 'orth_shift'
+    if args.intervention and flag_selected and args.intervention != flag_selected:
+        raise ValueError('--intervention conflicts with --suffix_push/--orth_shift.')
+    return args.intervention or flag_selected
 
-    coeff_df = pd.read_json(coeff_dir)
 
-    zero_dir = cfg.multi_seed_generations_transfer_dir()
-    zero_df = utils.concat_json_files_in_dir(zero_dir)
+def print_table(df: pd.DataFrame) -> None:
+    columns = ['intervention', 'coeff', 'records', 'prompts', 'suffixes', 'seeds', 'zero_asr', 'intervention_asr', 'delta_asr', 'no_suffix_asr']
+    table = df[columns].copy()
+    for column in ['zero_asr', 'intervention_asr', 'delta_asr', 'no_suffix_asr']:
+        table[column] = table[column].map(lambda value: f'{value:.4f}')
+    print(table.to_string(index=False))
 
-    filtered_zero_df = get_filtered_zero_df(zero_df, coeff_df)
-    assert len(filtered_zero_df) == len(coeff_df), "Filtered zero DataFrame length does not match coefficient DataFrame length"
 
-    zero_asr = get_asr(filtered_zero_df)
-    print(f"Zero coefficient ASR: {zero_asr:.4f}")
-    print(f"Number of jailbroken responses for zero coefficient: {get_num_jailbroken(filtered_zero_df)} out of {len(filtered_zero_df)}")
+def main() -> None:
+    args = parse_arguments()
+    config = gcg_config.load_config(args.config)
+    if args.model_path:
+        config.setdefault('experiment', {})['model_id'] = args.model_path
+        config['experiment']['model_alias'] = Path(args.model_path).name.lower()
 
-    coeff_asr = get_asr(coeff_df)
-    print(f"Coefficient ASR for coefficient {coeff}: {coeff_asr:.4f}")
-    print(f"Number of jailbroken responses for coefficient {coeff}: {get_num_jailbroken(coeff_df)} out of {len(coeff_df)}")
+    zero_df = load_manifest_tree(baseline_transfer_dir(config))
+    no_suffix_df = load_artifact_df(no_suffix_path(config))
+    rows = []
+    for intervention in gcg_config.selected_interventions(config, selected_intervention(args)):
+        for coeff in gcg_config.selected_coefficients(config, intervention, args.coeff):
+            rows.append(analyze_one(config, zero_df, no_suffix_df, intervention, coeff))
+    results = pd.DataFrame(rows)
+    print_table(results)
 
-    no_suffix_df = pd.read_json(cfg.no_suffix_generations_path())
-    filtered_no_suffix_df = no_suffix_df[no_suffix_df['prompt_id'].isin(coeff_df['prompt_id'])]
-    no_suffix_asr = get_asr(filtered_no_suffix_df)
-    print(f"No suffix ASR: {no_suffix_asr:.4f}")
+    if not args.no_save:
+        output_dir = gcg_config.repo_path(args.output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        results.to_csv(output_dir / f'{gcg_config.model_alias(config)}_gcg_push_summary.csv', index=False)
+        results.to_json(output_dir / f'{gcg_config.model_alias(config)}_gcg_push_summary.json', orient='records', indent=2)
+        print(f'Wrote {output_dir}')
+
+
+if __name__ == '__main__':
+    main()

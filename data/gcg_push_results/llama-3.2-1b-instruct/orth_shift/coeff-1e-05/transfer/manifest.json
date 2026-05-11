@@ -1,0 +1,50 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "data/gcg_push_results/llama-3.2-1b-instruct/orth_shift/coeff-1e-05/transfer",
+  "original_bytes": 1644796,
+  "original_sha256": "3356e7ed8c7c6849a8ffe0a9eb93d3921b94b96b35795a76a3b3c1a055f48f56",
+  "top_level": "array",
+  "total_records": 2000,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 2000,
+      "bytes": 1419672,
+      "sha256": "2511e307ab4f68460af492ad11d3c8b94f2cc3ade24df7b72e3da23e2393b367"
+    }
+  ],
+  "metadata": {
+    "model_alias": "llama-3.2-1b-instruct",
+    "model_id": "meta-llama/Llama-3.2-1B-Instruct",
+    "experiment": "20_random_indices",
+    "intervention": "orth_shift",
+    "coeff": "1e-05",
+    "split": "transfer",
+    "indices": [
+      5,
+      9,
+      11,
+      17,
+      24,
+      27,
+      36,
+      37,
+      42,
+      43,
+      50,
+      58,
+      60,
+      64,
+      70,
+      73,
+      84,
+      89,
+      92,
+      97
+    ],
+    "seed_start": 0,
+    "seed_end": 4,
+    "num_steps": 500
+  }
+}
