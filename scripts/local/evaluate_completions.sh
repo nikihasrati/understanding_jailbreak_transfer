@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+python -m pipeline.evaluation.evaluate_completions "$@"

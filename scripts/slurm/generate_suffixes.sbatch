@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --job-name=generate_suffixes
+#SBATCH --gres=gpu:1
+#SBATCH --time=48:00:00
+#SBATCH --mem=50G
+#SBATCH --output=slurm-%j_%a.out
+
+PROFILE=${1:?profile required: general or preempt}
+case "$PROFILE" in
+  general|preempt) ;;
+  *) echo "PROFILE must be 'general' or 'preempt'" >&2; exit 2 ;;
+esac
+
+MODEL_ID=${2:?model id required}
+MODEL_CACHE_ROOT=${3:?model cache root required}
+RESULTS_DIR=${4:-data/gcg_results/raw}
+NUM_STEPS=${NUM_STEPS:-500}
+END_SEED=${END_SEED:-99}
+INDEX=${SLURM_ARRAY_TASK_ID}
+
+export HF_HOME="$MODEL_CACHE_ROOT/.cache/huggingface"
+export TRANSFORMERS_CACHE="$HF_HOME/hub"
+
+python -m pipeline.suffix_generation.run_gcg   --model-id "$MODEL_ID"   --index "$INDEX"   --num-steps "$NUM_STEPS"   --end-seed "$END_SEED"   --results-dir "$RESULTS_DIR"

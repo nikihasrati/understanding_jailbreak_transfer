@@ -1,0 +1,6 @@
+slurm:
+  general_partition: general
+  preempt_partition: preempt
+  gpu_constraint: A6000|L40|L40S
+  mail_type: END,FAIL
+  mail_user: user@example.edu

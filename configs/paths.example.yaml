@@ -1,0 +1,4 @@
+paths:
+  dataset_root: ./data
+  model_cache_root: /path/to/model/cache/root
+  output_root: ./outputs

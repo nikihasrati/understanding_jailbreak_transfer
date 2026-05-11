@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.cache/
+slurm-*.out
+slurm-*.err
+slurm_logs/
+logs/
+figures/
+*.tmp
+*.mmap
+.DS_Store
+
+# Activation tensors are intentionally not committed due to large file size.
+data/activations/
+**/generation_chunks/
+**/evaluation_chunks/
+**/combined.json

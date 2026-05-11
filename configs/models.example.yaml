@@ -1,0 +1,11 @@
+models:
+  llama_2_7b_chat:
+    model_path: meta-llama/Llama-2-7b-chat-hf
+  llama_3_2_1b_instruct:
+    model_path: meta-llama/Llama-3.2-1B-Instruct
+  qwen2_5_3b_instruct:
+    model_path: Qwen/Qwen2.5-3B-Instruct
+  phi_3_mini_4k_instruct:
+    model_path: microsoft/Phi-3-mini-4k-instruct
+  vicuna_13b_v1_5:
+    model_path: lmsys/vicuna-13b-v1.5
