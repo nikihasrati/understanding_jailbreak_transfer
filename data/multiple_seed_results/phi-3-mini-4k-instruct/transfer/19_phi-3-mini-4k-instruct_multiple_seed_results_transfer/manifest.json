@@ -1,0 +1,65 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "multiple_seed_results/phi-3-mini-4k-instruct/transfer/19_phi-3-mini-4k-instruct_multiple_seed_results_transfer.json",
+  "original_bytes": 49313934,
+  "original_sha256": "20f278687b4c90d222803095cd83632b0a89932e412040b61782dc99f48e1670",
+  "top_level": "array",
+  "total_records": 41672,
+  "total_chunks": 9,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 4665667,
+      "sha256": "dddd6da56a712a9c05b89f4644dd15ac8e00010e22c644f81ce05c6ab418558d"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 4445181,
+      "sha256": "e8e1857fa69c468050ade6c8a1f0b67b09ef6de6921c7bd62c10e3a6d63101ab"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 4123107,
+      "sha256": "da1b15c7859e406be1e1d44748345d106336810559c7ab726a488d019c819440"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 4767057,
+      "sha256": "d8e28c9ffe812fd612f78f3bee6bfc5931bca041f71ac6804c89b45548c77427"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 6131647,
+      "sha256": "d443e94979a9767d9ccd2406abb267eefc361401907b47c9f6ce729d9977877c"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 6031387,
+      "sha256": "ba7ba02aff2a54e671297e828b4f23204f1abd2f31324d507c0604545fb9896c"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 5000,
+      "bytes": 6046274,
+      "sha256": "409dd968f9de677dd88410e7a291c757f40a7bcce8202ca39d449529d4d532bf"
+    },
+    {
+      "path": "chunks/chunk_00007.json",
+      "records": 5000,
+      "bytes": 6276775,
+      "sha256": "ac4b2bea5da821167d90d54b6403c63ffb6ab6e4011e4fce40101a0bf65a26d7"
+    },
+    {
+      "path": "chunks/chunk_00008.json",
+      "records": 1672,
+      "bytes": 2208605,
+      "sha256": "1c3a48c8b762d47fa7728a0062a467d4e3c8414097efd5fde7aced29e021d77c"
+    }
+  ]
+}
