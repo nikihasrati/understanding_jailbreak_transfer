@@ -1,0 +1,23 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "multiple_seed_results/llama-2-7b-chat-hf/no_transfer/llama-2-7b-chat-hf_multiple_seed_results_no_transfer.json",
+  "original_bytes": 5967763,
+  "original_sha256": "13e2140eacc3038e5aa60f6ab7ee1d7add3e17efbe916f40bd8fc03eafd562d5",
+  "top_level": "array",
+  "total_records": 10000,
+  "total_chunks": 2,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 2503122,
+      "sha256": "2b1436cc44fa1646cb49674c6b459748a38f239a55d1854827a691bd86fbc72c"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 2564643,
+      "sha256": "83ba91a7288e45eb5d3d5015516811498063ebfa700de762bd4ff5f3bfbbd455"
+    }
+  ]
+}

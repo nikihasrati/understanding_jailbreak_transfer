@@ -1,0 +1,53 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "multiple_seed_results/llama-2-7b-chat-hf/transfer/24_llama-2-7b-chat-hf_multiple_seed_results_transfer.json",
+  "original_bytes": 18545102,
+  "original_sha256": "162022d8c9d11c949d8782bb5d799b1630b9719764b76c65cb78b7b3e9abe61d",
+  "top_level": "array",
+  "total_records": 31250,
+  "total_chunks": 7,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 2581513,
+      "sha256": "533ebdf08e2c03e412da6ee777028687a69d067f0a267c74290807938b4cd375"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 2625611,
+      "sha256": "cfdd7b7d1fbe2b5d04ccf4ab2d9e22f2ecb259fc4cf2d52bd593f49ec4e661dc"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 2351513,
+      "sha256": "af74430fd63f2cff003bab0901ff26358f1427467a52a880f9045414e08e498f"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 2395611,
+      "sha256": "9d9791cb807afafcad5778c8e50720cdc478dd02178a24655ccb14d90876d90a"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 2531513,
+      "sha256": "f570b838b0bdfff08e06d2ab383fc6c032db5fe0dbec5258e692bca35af2935d"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 2575611,
+      "sha256": "8f8d9ac0a177b2e5b71dfbc30045edfc1e4a0a830ba79eee6f705be48fd315eb"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 1250,
+      "bytes": 609548,
+      "sha256": "a5537f019d9485013260056f95477c048eb072022398ba12b6e6a2eba4b4e695"
+    }
+  ]
+}
