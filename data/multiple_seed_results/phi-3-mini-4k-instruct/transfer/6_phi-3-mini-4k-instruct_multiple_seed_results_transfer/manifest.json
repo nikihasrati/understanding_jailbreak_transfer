@@ -1,0 +1,65 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "multiple_seed_results/phi-3-mini-4k-instruct/transfer/6_phi-3-mini-4k-instruct_multiple_seed_results_transfer.json",
+  "original_bytes": 42547522,
+  "original_sha256": "2746af64b30ba50cb30266c30384b10425e19ed5d1582d7981a2854b844365e6",
+  "top_level": "array",
+  "total_records": 41664,
+  "total_chunks": 9,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 4715079,
+      "sha256": "aad7bb16bb11e90a33a558eea99cc9faddd870aab3b93b88095e196f5d30e2ce"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 4596517,
+      "sha256": "d90b86d8a2c22f5bc4ca13b72030d232204b5ff14d9d6950b673be20ddcc82b1"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 4960576,
+      "sha256": "cc81c5faf7a2f0f5ca24034765a49b7b051ae2b606cc3b451e46534bfda6fbb1"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 5053403,
+      "sha256": "5f9398339217427f9b1d946c95daa3ea6bec352f67967e4b63e4dbc1c8367fbf"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 4116780,
+      "sha256": "eb9d822088307893dd28bfdf44c35eaee1b337df7a332c1302bff7524269166c"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 4073594,
+      "sha256": "9747636abbe12752def7df1ff4e782f36d8d41ed5ffcaec153ea1649265d101d"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 5000,
+      "bytes": 4508406,
+      "sha256": "6bff0b1f079b95422013b8c1d87cb4bfa9649cc8dc49639c4b58a96bfd38b49f"
+    },
+    {
+      "path": "chunks/chunk_00007.json",
+      "records": 5000,
+      "bytes": 4369950,
+      "sha256": "48bda93d639f42d02857acddee31a03ac5a700d2f925b6d2ef29dc25e12d328f"
+    },
+    {
+      "path": "chunks/chunk_00008.json",
+      "records": 1664,
+      "bytes": 1574082,
+      "sha256": "28932c71a5d3e73e184e1e699e371ee261e6ee46f56f34e332c03f619c7c8440"
+    }
+  ]
+}
