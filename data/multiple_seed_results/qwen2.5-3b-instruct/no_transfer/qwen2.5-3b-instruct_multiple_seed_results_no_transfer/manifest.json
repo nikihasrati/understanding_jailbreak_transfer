@@ -1,0 +1,23 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "multiple_seed_results/qwen2.5-3b-instruct/no_transfer/qwen2.5-3b-instruct_multiple_seed_results_no_transfer.json",
+  "original_bytes": 14251587,
+  "original_sha256": "7be4c6ec819cfb670e7780f791cb0d9ee99984d31d13bd3ec3826913c235330d",
+  "top_level": "array",
+  "total_records": 10000,
+  "total_chunks": 2,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 6523915,
+      "sha256": "35a84b023e734f7025c6a780aafe6d8f5b4309cf7c7cc920dd3243eceb9bc8df"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 6638483,
+      "sha256": "32889b9782c41493a9de92a64089cf535f996ae0faa131b5b43a60e64262e68b"
+    }
+  ]
+}
