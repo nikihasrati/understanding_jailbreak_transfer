@@ -1,0 +1,17 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "gcg_push_results/llama-3.2-1b-instruct/no_transfer/orth_shift_coeff-0.001/llama-3.2-1b-instruct_coeff-0.001_multiple_seed_results_no_transfer.json",
+  "original_bytes": 58587,
+  "original_sha256": "9ae9bce7debe5aad90d1f8c494952ebb94bc8184d342ed9037088cd75072ee83",
+  "top_level": "array",
+  "total_records": 100,
+  "total_chunks": 1,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 100,
+      "bytes": 50349,
+      "sha256": "2b6c3253d49789aa7f25e62b9073bf95699f45602a623b32f143c1f259dcc225"
+    }
+  ]
+}
