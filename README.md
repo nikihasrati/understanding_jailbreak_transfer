@@ -31,8 +31,8 @@ Read the docs in this order if you are reproducing results for the first time:
 
 This table provides an overview of what to run, in what order, what checkpoint or saved output to expect, and the relevant paper sections. For the detailed section-by-section mapping between the files in the repo and the sections in the paper, use [docs/paper_map.md](docs/paper_map.md).
 
-Path shorthand: 
-- `<output-dir>`: usually `data/multiple_seed_results`. 
+Path shorthand:
+- `<output-dir>`: usually `data/multiple_seed_results`.
 - `<artifact-dir>`: usually `<output-dir>/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer`.
 
 | Step | Workflow stage | Paper section(s) | Main module | Save location |

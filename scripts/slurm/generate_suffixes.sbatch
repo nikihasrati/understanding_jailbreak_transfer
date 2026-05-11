@@ -5,15 +5,9 @@
 #SBATCH --mem=50G
 #SBATCH --output=slurm-%j_%a.out
 
-PROFILE=${1:?profile required: general or preempt}
-case "$PROFILE" in
-  general|preempt) ;;
-  *) echo "PROFILE must be 'general' or 'preempt'" >&2; exit 2 ;;
-esac
-
-MODEL_ID=${2:?model id required}
-MODEL_CACHE_ROOT=${3:?model cache root required}
-RESULTS_DIR=${4:-data/gcg_results/raw}
+MODEL_ID=${1:?model id required}
+MODEL_CACHE_ROOT=${2:?model cache root required}
+RESULTS_DIR=${3:-data/gcg_results/raw}
 NUM_STEPS=${NUM_STEPS:-500}
 END_SEED=${END_SEED:-99}
 INDEX=${SLURM_ARRAY_TASK_ID}

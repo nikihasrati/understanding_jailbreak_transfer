@@ -49,9 +49,7 @@ chunks/ -> generation_chunks/ -> evaluation_chunks/ -> chunks/ + manifest.json
 
 Use Slurm job arrays for stages where each task handles one prompt index or one chunk. In the wrappers under `scripts/slurm/`, `SLURM_ARRAY_TASK_ID` becomes the prompt index or chunk ID. This is the recommended way to run generation and evaluation at paper scale.
 
-The wrappers in `scripts/slurm/` take a first positional argument named `PROFILE`, which must be either `general` or `preempt`. Because Slurm evaluates scheduler directives before the script body runs, pass the actual scheduler partition to `sbatch` as an `sbatch` option and pass the same profile as the script's first argument.
-
-If your site uses accounts, constraints, or mail settings, pass them to `sbatch` directly, for example `--account`, `--constraint`, `--mail-type`, or `--mail-user`. Do not commit site-specific values to this repo.
+Pass the actual scheduler partition to `sbatch` with `--partition "$SLURM_PARTITION"`. If your site uses accounts, constraints, or mail settings, pass them to `sbatch` directly, for example `--account`, `--constraint`, `--mail-type`, or `--mail-user`. Do not commit site-specific values to this repo.
 
 ## 0. Setup and Environment
 
@@ -63,13 +61,12 @@ Create the conda environment once:
 conda env create -f environment.yml
 ```
 
-Define model/cache, artifact, and Slurm settings for each shell session:
+Define the shared model/cache and Slurm settings for each shell session:
 
 ```bash
 export MODEL_ID=meta-llama/Llama-3.2-1B-Instruct
 export MODEL_ALIAS=llama-3.2-1b-instruct
 export MODEL_CACHE_ROOT=/path/to/model/cache/root
-export SLURM_PROFILE=general      # or preempt
 export SLURM_PARTITION=general    # site-specific partition name
 
 export HF_HOME="$MODEL_CACHE_ROOT/.cache/huggingface"
@@ -77,41 +74,11 @@ export TRANSFORMERS_CACHE="$HF_HOME/hub"
 export HF_HUB_CACHE="$HF_HOME/hub"
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export NCCL_P2P_DISABLE=1
-
-export OUTPUT_ROOT=data/multiple_seed_results
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
-export NO_SUFFIX_ARTIFACT_DIR="data/no_suffix_generations/${MODEL_ALIAS}_no_suffix_generations"
-
-export NUM_PROMPTS=100
-export GCG_ARRAY_START=0
-export GCG_ARRAY_END=$((NUM_PROMPTS - 1))
-export GCG_NUM_STEPS=500
-export GCG_END_SEED=99
-export EXPECTED_PROMPTS=100
-export EXPECTED_SEEDS=100
-export JSON_RECORDS_PER_CHUNK=5000
-export NUM_GENERATION_CHUNKS=32
-export GENERATION_ARRAY_START=0
-export GENERATION_ARRAY_END=$((NUM_GENERATION_CHUNKS - 1))
-export NUM_EVALUATION_CHUNKS=8
-export NUM_JUDGE_GPUS=4
-export EVALUATION_ARRAY_START=0
-export EVALUATION_ARRAY_END=$((NUM_EVALUATION_CHUNKS - 1))
-export NUM_PUBLISHED_CHUNKS=50
-export NUM_ACTIVATION_CHUNKS=32
-export ACTIVATION_BATCH_SIZE=100
-export GCG_PUSH_COEFF=0.01
-export NUM_CROSS_MODEL_GENERATION_CHUNKS=32
-export CROSS_MODEL_GENERATION_ARRAY_START=0
-export CROSS_MODEL_GENERATION_ARRAY_END=$((NUM_CROSS_MODEL_GENERATION_CHUNKS - 1))
-export NUM_CROSS_MODEL_EVALUATION_CHUNKS=8
-export CROSS_MODEL_EVALUATION_ARRAY_START=0
-export CROSS_MODEL_EVALUATION_ARRAY_END=$((NUM_CROSS_MODEL_EVALUATION_CHUNKS - 1))
 ```
 
-Use `configs/models.example.yaml` for the model IDs used in the paper. Set `HF_TOKEN` as well if any gated model checkpoints require Hugging Face authentication. Adjust the workflow parameters to match your cluster sharding and rerun target.
+Use `configs/models.example.yaml` for the model IDs used in the paper. Set `HF_TOKEN` as well if any gated model checkpoints require Hugging Face authentication.
 
-**Output:** The setup step creates shell variables only; it does not write paper artifacts.
+Later steps define any extra variables immediately before use.
 
 ## 1. Generate GCG Suffixes
 
@@ -119,11 +86,21 @@ Use `configs/models.example.yaml` for the model IDs used in the paper. Set `HF_T
 
 `pipeline.suffix_generation.run_gcg` runs the GCG attack for one JailbreakBench harmful prompt index and a seed range. Each seed produces a candidate adversarial suffix for the prompt. With Slurm, one array task runs one prompt index.
 
+Set these variables for this step:
+
+```bash
+export NUM_PROMPTS=100
+export GCG_ARRAY_START=0
+export GCG_ARRAY_END=$((NUM_PROMPTS - 1))
+export GCG_NUM_STEPS=500
+export GCG_END_SEED=99
+```
+
 ```bash
 NUM_STEPS="$GCG_NUM_STEPS" END_SEED="$GCG_END_SEED" \
 sbatch --partition "$SLURM_PARTITION" --array="${GCG_ARRAY_START}-${GCG_ARRAY_END}" \
   scripts/slurm/generate_suffixes.sbatch \
-  "$SLURM_PROFILE" "$MODEL_ID" "$MODEL_CACHE_ROOT" data/gcg_results/raw
+  "$MODEL_ID" "$MODEL_CACHE_ROOT" data/gcg_results/raw
 ```
 
 **Output:** Raw GCG JSON files are saved under `data/gcg_results/raw/<model-or-alias>/index-*/seed-*/results.json`.
@@ -133,6 +110,14 @@ sbatch --partition "$SLURM_PARTITION" --array="${GCG_ARRAY_START}-${GCG_ARRAY_EN
 **Paper connection:** Section 4, "Data" and "Generation of adversarial suffixes"; Section 5.1 intra-model transfer and multi-seed transfer matrices.
 
 This CPU/data-prep step reads raw GCG results, extracts prompt/suffix records, creates no-transfer and transfer datasets, and prints validation results when `--check` is set. Run it locally, in an interactive Slurm session, or as a small batch job.
+
+Set these variables for this step:
+
+```bash
+export OUTPUT_ROOT=data/multiple_seed_results
+export EXPECTED_PROMPTS=100
+export EXPECTED_SEEDS=100
+```
 
 ```bash
 python -m pipeline.suffix_generation.create_datasets \
@@ -146,13 +131,21 @@ python -m pipeline.suffix_generation.create_datasets \
 
 Use the printed check output before continuing. If prompts or seeds are missing, rerun suffix generation for the missing prompt/seed combinations.
 
-**Output:** Initial no-transfer and transfer JSON arrays are saved under `$OUTPUT_ROOT/$MODEL_ALIAS/{no_transfer,transfer}/`. The check results are printed to stdout.
+**Output:** Initial no-transfer and transfer JSON arrays are saved under `$OUTPUT_ROOT/$MODEL_ALIAS/{no_transfer,transfer}/`.
 
 ## 3. Canonical JSON Artifacts
 
 **Paper connection:** Reproducibility support for Sections 4-5.
 
 A manifest-backed artifact is a directory containing `manifest.json` plus canonical `chunks/`. The manifest records record counts, file sizes, and SHA256 checksums. `tools/split_json_records.py` creates the chunked release format, and `tools/verify_manifest.py` confirms that the committed chunks still match the manifest. See [artifacts.md](artifacts.md) for details.
+
+Set these variables for this step:
+
+```bash
+export OUTPUT_ROOT=data/multiple_seed_results
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export JSON_RECORDS_PER_CHUNK=5000
+```
 
 ```bash
 python tools/split_json_records.py \
@@ -172,6 +165,14 @@ python tools/verify_manifest.py \
 
 Generation jobs should not modify canonical `chunks/` directly. This step creates temporary `generation_chunks/`; it is usually small enough to run as a local command or in an interactive Slurm session before submitting the array.
 
+Set these variables for this step:
+
+```bash
+export OUTPUT_ROOT=data/multiple_seed_results
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export NUM_GENERATION_CHUNKS=32
+```
+
 ```bash
 python tools/prepare_generation_chunks.py \
   --artifact-dir "$ARTIFACT_DIR" \
@@ -187,12 +188,22 @@ python tools/prepare_generation_chunks.py \
 
 `pipeline.generation.generate_completions` sends each `jailbreak` string to the target model and writes a `response` field into `generation_chunks/`. These model responses are not yet ASR labels; they are the raw text that the jailbreak judge evaluates in the next step.
 
+Set these variables for this step:
+
+```bash
+export OUTPUT_ROOT=data/multiple_seed_results
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export NUM_GENERATION_CHUNKS=32
+export GENERATION_ARRAY_START=0
+export GENERATION_ARRAY_END=$((NUM_GENERATION_CHUNKS - 1))
+```
+
 Submit one array task per `generation_chunks/chunk_*.json` file:
 
 ```bash
 sbatch --partition "$SLURM_PARTITION" --array="${GENERATION_ARRAY_START}-${GENERATION_ARRAY_END}" \
   scripts/slurm/generate_completions.sbatch \
-  "$SLURM_PROFILE" "$MODEL_ID" "$MODEL_CACHE_ROOT" multi-seed
+  "$MODEL_ID" "$MODEL_CACHE_ROOT" multi-seed
 ```
 
 After the array finishes, check that every response was produced:
@@ -204,13 +215,21 @@ python tools/check_completions.py \
   --stage generation
 ```
 
-**Output:** `$ARTIFACT_DIR/generation_chunks/chunk_*.json` is updated with `response` fields. The coverage check prints missing or empty responses, if any.
+**Output:** `$ARTIFACT_DIR/generation_chunks/chunk_*.json` is updated with `response` fields.
 
 ## 6. Combine Completions for Evaluation
 
 **Paper connection:** Operational setup for the Section 4 jailbreak-judge evaluation step.
 
 Evaluation uses the Llama 3 jailbreak judge and typically needs more GPUs per job than generation, so use fewer chunks for this step. `tools/combine_completions.py` verifies that all `response` fields are populated before writing `evaluation_chunks/`.
+
+Set these variables for this step:
+
+```bash
+export OUTPUT_ROOT=data/multiple_seed_results
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export NUM_EVALUATION_CHUNKS=8
+```
 
 ```bash
 python tools/combine_completions.py \
@@ -227,13 +246,26 @@ python tools/combine_completions.py \
 
 **Paper connection:** Section 4, "Evaluating jailbreak success"; Definition 1 ASR; all Section 5 transfer labels.
 
-`pipeline.evaluation.evaluate_completions` runs the jailbreak judge on each `(prompt, response)` pair and writes a `jailbroken` boolean field into `evaluation_chunks/`. Submit one array task per evaluation chunk:
+`pipeline.evaluation.evaluate_completions` runs the jailbreak judge on each `(prompt, response)` pair and writes a `jailbroken` boolean field into `evaluation_chunks/`.
+
+Set these variables for this step:
+
+```bash
+export OUTPUT_ROOT=data/multiple_seed_results
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export NUM_EVALUATION_CHUNKS=8
+export EVALUATION_ARRAY_START=0
+export EVALUATION_ARRAY_END=$((NUM_EVALUATION_CHUNKS - 1))
+export NUM_JUDGE_GPUS=4
+```
+
+Submit one array task per evaluation chunk:
 
 ```bash
 NUM_GPUS="$NUM_JUDGE_GPUS" \
 sbatch --partition "$SLURM_PARTITION" --array="${EVALUATION_ARRAY_START}-${EVALUATION_ARRAY_END}" \
   scripts/slurm/evaluate_completions.sbatch \
-  "$SLURM_PROFILE" "$MODEL_ID" "$MODEL_CACHE_ROOT" multi_seed
+  "$MODEL_ID" "$MODEL_CACHE_ROOT" multi_seed
 ```
 
 After the array finishes, check that every record was evaluated:
@@ -247,13 +279,21 @@ python tools/check_completions.py \
 
 The field is called `jailbroken`: `true` means the judge classified the response as a successful jailbreak, and `false` means it did not.
 
-**Output:** `$ARTIFACT_DIR/evaluation_chunks/chunk_*.json` is updated with `jailbroken` boolean fields. The coverage check prints missing labels, if any.
+**Output:** `$ARTIFACT_DIR/evaluation_chunks/chunk_*.json` is updated with `jailbroken` boolean fields.
 
 ## 8. Promote Evaluated Chunks Back to Canonical Artifacts
 
 **Paper connection:** Reproducibility support for Section 5 analysis inputs.
 
 After evaluation is complete, replace canonical `chunks/` with the evaluated records and update `manifest.json`. This is the step that makes the final evaluated artifact ready to commit and publish.
+
+Set these variables for this step:
+
+```bash
+export OUTPUT_ROOT=data/multiple_seed_results
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export NUM_PUBLISHED_CHUNKS=50
+```
 
 ```bash
 python tools/combine_completions.py \
@@ -279,6 +319,13 @@ Commit `chunks/` and `manifest.json`; do not commit `generation_chunks/`, `evalu
 
 Run this when imported artifacts or older outputs encode labels as `0`/`1`, strings, or nullable values. This CPU/data-prep step can run locally or as a small batch job.
 
+Set these variables for this step:
+
+```bash
+export OUTPUT_ROOT=data/multiple_seed_results
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+```
+
 ```bash
 python -m pipeline.evaluation.normalize_jailbreak_labels \
   --input "$ARTIFACT_DIR/combined.json" \
@@ -295,15 +342,22 @@ After normalizing, split the file back into canonical chunks if it is part of th
 
 The no-suffix baseline asks the model to answer each harmful prompt without an adversarial suffix. This gives the base refusal or unsafe-response rate for the model.
 
+Set these variables for this step:
+
+```bash
+export NO_SUFFIX_ARTIFACT_DIR="data/no_suffix_generations/${MODEL_ALIAS}_no_suffix_generations"
+export NUM_JUDGE_GPUS=4
+```
+
 ```bash
 sbatch --partition "$SLURM_PARTITION" \
   scripts/slurm/generate_completions.sbatch \
-  "$SLURM_PROFILE" "$MODEL_ID" "$MODEL_CACHE_ROOT" no-suffix-completions
+  "$MODEL_ID" "$MODEL_CACHE_ROOT" no-suffix-completions
 
 NUM_GPUS="$NUM_JUDGE_GPUS" \
 sbatch --partition "$SLURM_PARTITION" \
   scripts/slurm/evaluate_completions.sbatch \
-  "$SLURM_PROFILE" "$MODEL_ID" "$MODEL_CACHE_ROOT" no_suffix_completions
+  "$MODEL_ID" "$MODEL_CACHE_ROOT" no_suffix_completions
 ```
 
 **Output:** No-suffix responses and `jailbroken` labels are saved under `data/no_suffix_generations/${MODEL_ALIAS}_no_suffix_generations/`, usually as `combined.json` plus any chunked release files you create from it.
@@ -329,11 +383,18 @@ To regenerate directions from the external refusal-direction repo, see [refusal_
 
 Activations are internal model vectors used for semantic-similarity, refusal-connectivity, suffix-push, and orthogonal-shift analyses. They are not stored in Git. The Slurm activation wrapper runs `pipeline.activations.save_activations` with the chosen input kind, number of chunks, and batch size.
 
+Set these variables for this step:
+
+```bash
+export NUM_ACTIVATION_CHUNKS=32
+export ACTIVATION_BATCH_SIZE=100
+```
+
 ```bash
 NUM_CHUNKS="$NUM_ACTIVATION_CHUNKS" BATCH_SIZE="$ACTIVATION_BATCH_SIZE" \
 sbatch --partition "$SLURM_PARTITION" \
   scripts/slurm/save_activations.sbatch \
-  "$SLURM_PROFILE" "$MODEL_ID" "$MODEL_CACHE_ROOT" multi_seed_jailbreak
+  "$MODEL_ID" "$MODEL_CACHE_ROOT" multi_seed_jailbreak
 ```
 
 See [activations.md](activations.md) for activation formats and export commands.
@@ -351,7 +412,7 @@ sbatch --partition "$SLURM_PARTITION" --gres=gpu:1 \
   --wrap "python -m pipeline.analysis.multi_seed_data_analysis --model_path \"$MODEL_ID\""
 ```
 
-**Output:** Summary statistics are printed to stdout, and figures are saved under `figures/$MODEL_ALIAS/`. Some activation-derived intermediates are read from or written under `outputs/activations/$MODEL_ALIAS/`.
+**Output:** Summary statistics are printed to stdout, and figures are saved under `figures/$MODEL_ALIAS/`.
 
 ## 14. Cross-Model Transfer
 
@@ -359,13 +420,24 @@ sbatch --partition "$SLURM_PARTITION" --gres=gpu:1 \
 
 Cross-model transfer asks whether suffixes generated on one source model jailbreak a different target model. The setup script builds the source-target records, generation runs the target model, evaluation labels each response with the judge, and the analysis script plots or summarizes the source-to-target success matrix.
 
+Set these variables for this step:
+
 ```bash
 export SOURCE_MODEL_ID=meta-llama/Llama-3.2-1B-Instruct
 export TARGET_MODEL_ID=Qwen/Qwen2.5-3B-Instruct
 export SOURCE_ALIAS=llama-3.2-1b-instruct
 export TARGET_ALIAS=qwen2.5-3b-instruct
 export CROSS_MODEL_ARTIFACT_DIR="data/cross_model_transfer_generations/${SOURCE_ALIAS}_to_${TARGET_ALIAS}"
+export NUM_CROSS_MODEL_GENERATION_CHUNKS=32
+export CROSS_MODEL_GENERATION_ARRAY_START=0
+export CROSS_MODEL_GENERATION_ARRAY_END=$((NUM_CROSS_MODEL_GENERATION_CHUNKS - 1))
+export NUM_CROSS_MODEL_EVALUATION_CHUNKS=8
+export CROSS_MODEL_EVALUATION_ARRAY_START=0
+export CROSS_MODEL_EVALUATION_ARRAY_END=$((NUM_CROSS_MODEL_EVALUATION_CHUNKS - 1))
+export NUM_JUDGE_GPUS=4
+```
 
+```bash
 python -m pipeline.cross_model.set_up_dataset \
   --source_model_path "$SOURCE_MODEL_ID" \
   --target_model_path "$TARGET_MODEL_ID" \
@@ -377,7 +449,7 @@ Submit one array task per cross-model generation chunk:
 ```bash
 sbatch --partition "$SLURM_PARTITION" --array="${CROSS_MODEL_GENERATION_ARRAY_START}-${CROSS_MODEL_GENERATION_ARRAY_END}" \
   scripts/slurm/cross_model_generate.sbatch \
-  "$SLURM_PROFILE" "$SOURCE_MODEL_ID" "$TARGET_MODEL_ID" "$MODEL_CACHE_ROOT"
+  "$SOURCE_MODEL_ID" "$TARGET_MODEL_ID" "$MODEL_CACHE_ROOT"
 
 python tools/check_completions.py \
   --artifact-dir "$CROSS_MODEL_ARTIFACT_DIR" \
@@ -394,7 +466,7 @@ python tools/combine_completions.py \
 NUM_GPUS="$NUM_JUDGE_GPUS" \
 sbatch --partition "$SLURM_PARTITION" --array="${CROSS_MODEL_EVALUATION_ARRAY_START}-${CROSS_MODEL_EVALUATION_ARRAY_END}" \
   scripts/slurm/cross_model_evaluate.sbatch \
-  "$SLURM_PROFILE" "$SOURCE_MODEL_ID" "$TARGET_MODEL_ID" "$MODEL_CACHE_ROOT"
+  "$SOURCE_MODEL_ID" "$TARGET_MODEL_ID" "$MODEL_CACHE_ROOT"
 ```
 
 Combine completed cross-model evaluation chunks and plot the success matrix:
@@ -502,13 +574,25 @@ python -m pipeline.gcg_push.data_analysis \
   --config configs/gcg_push_paper.yaml
 ```
 
-**Output:** Published GCG-push artifacts live under `data/gcg_push_results/$MODEL_ALIAS/{suffix_push,orth_shift}/coeff-$COEFF/{no_transfer,transfer}/`. Temporary `generation_chunks/` and `evaluation_chunks/` are ignored. Analysis writes summaries to `outputs/gcg_push_analysis/` and prints ASR comparisons against the zero-coefficient baseline.
+**Output:** Published GCG-push artifacts live under `data/gcg_push_results/$MODEL_ALIAS/{suffix_push,orth_shift}/coeff-$COEFF/{no_transfer,transfer}/`. Analysis writes summaries to `outputs/gcg_push_analysis/` and prints ASR comparisons against the zero-coefficient baseline.
 
 ## 16. Prompt Rephrasings
 
 **Paper connection:** Section 5.6, "Prompt rephrasing"; Appendix C prompt-rephrasing instructions.
 
 Prompt rephrasing tests whether changing the wording of a harmful prompt changes its alignment with the refusal direction and, in turn, changes transfer success. `pipeline.prompt_rephrasings.setup_dataset` converts generated paraphrases into evaluation records. The generation and evaluation steps then use the same model-response and jailbreak-judge workflow as the main multi-seed artifacts.
+
+Set these variables for this step:
+
+```bash
+export NUM_GENERATION_CHUNKS=32
+export GENERATION_ARRAY_START=0
+export GENERATION_ARRAY_END=$((NUM_GENERATION_CHUNKS - 1))
+export NUM_EVALUATION_CHUNKS=8
+export EVALUATION_ARRAY_START=0
+export EVALUATION_ARRAY_END=$((NUM_EVALUATION_CHUNKS - 1))
+export NUM_JUDGE_GPUS=4
+```
 
 ```bash
 python -m pipeline.prompt_rephrasings.setup_dataset \
@@ -517,12 +601,12 @@ python -m pipeline.prompt_rephrasings.setup_dataset \
 
 sbatch --partition "$SLURM_PARTITION" --array="${GENERATION_ARRAY_START}-${GENERATION_ARRAY_END}" \
   scripts/slurm/generate_completions.sbatch \
-  "$SLURM_PROFILE" "$MODEL_ID" "$MODEL_CACHE_ROOT" rephrasings
+  "$MODEL_ID" "$MODEL_CACHE_ROOT" rephrasings
 
 NUM_GPUS="$NUM_JUDGE_GPUS" \
 sbatch --partition "$SLURM_PARTITION" --array="${EVALUATION_ARRAY_START}-${EVALUATION_ARRAY_END}" \
   scripts/slurm/evaluate_completions.sbatch \
-  "$SLURM_PROFILE" "$MODEL_ID" "$MODEL_CACHE_ROOT" rephrasings
+  "$MODEL_ID" "$MODEL_CACHE_ROOT" rephrasings
 ```
 
 **Output:** Prompt-rephrasing records are saved under `data/prompt_rephrasings/${MODEL_ALIAS}_prompt_rephrasings/`, with `generation_chunks/`, `evaluation_chunks/`, and final canonical `chunks/` following the same lifecycle as the main transfer artifacts.

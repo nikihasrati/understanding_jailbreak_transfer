@@ -5,15 +5,9 @@
 #SBATCH --mem=40G
 #SBATCH --output=slurm-%j.out
 
-PROFILE=${1:?profile required: general or preempt}
-case "$PROFILE" in
-  general|preempt) ;;
-  *) echo "PROFILE must be 'general' or 'preempt'" >&2; exit 2 ;;
-esac
-
-MODEL_PATH=${2:?model path required}
-MODEL_CACHE_ROOT=${3:?model cache root required}
-INPUT_KIND=${4:-multi_seed_jailbreak}
+MODEL_PATH=${1:?model path required}
+MODEL_CACHE_ROOT=${2:?model cache root required}
+INPUT_KIND=${3:-multi_seed_jailbreak}
 NUM_CHUNKS=${NUM_CHUNKS:-32}
 BATCH_SIZE=${BATCH_SIZE:-100}
 

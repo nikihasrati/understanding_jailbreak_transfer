@@ -5,15 +5,9 @@
 #SBATCH --mem=50G
 #SBATCH --output=slurm-%j_%a.out
 
-PROFILE=${1:?profile required: general or preempt}
-case "$PROFILE" in
-  general|preempt) ;;
-  *) echo "PROFILE must be 'general' or 'preempt'" >&2; exit 2 ;;
-esac
-
-MODEL_PATH=${2:?model path required}
-MODEL_CACHE_ROOT=${3:?model cache root required}
-FLAG_TYPE=${4:-multi_seed}
+MODEL_PATH=${1:?model path required}
+MODEL_CACHE_ROOT=${2:?model cache root required}
+FLAG_TYPE=${3:-multi_seed}
 CHUNK_ID=${SLURM_ARRAY_TASK_ID}
 NUM_GPUS=${NUM_GPUS:-4}
 
