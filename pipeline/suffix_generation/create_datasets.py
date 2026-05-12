@@ -10,7 +10,7 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Create and check multi-seed datasets from raw GCG results.')
     parser.add_argument('--model-path', required=True)
     parser.add_argument('--results-dir', default='data/gcg_results/raw')
-    parser.add_argument('--output-dir', default='outputs/multiple_seed_results')
+    parser.add_argument('--output-dir', default='outputs/intra_model_transfer/multi_seed')
     parser.add_argument('--expected-prompts', type=int, default=100)
     parser.add_argument('--expected-seeds', type=int, default=100)
     parser.add_argument('--check', action=argparse.BooleanOptionalAction, default=True)
@@ -78,8 +78,8 @@ def main(argv=None):
     transfer_dir.mkdir(parents=True, exist_ok=True)
 
     records = create_no_transfer_dataset(raw_model_dir)
-    no_transfer_path = no_transfer_dir / f'{alias}_multiple_seed_results_no_transfer.json'
-    transfer_path = transfer_dir / f'{alias}_multiple_seed_results_transfer.json'
+    no_transfer_path = no_transfer_dir / 'records.json'
+    transfer_path = transfer_dir / 'records.json'
 
     with no_transfer_path.open('w') as f:
         json.dump(records, f, indent=2)

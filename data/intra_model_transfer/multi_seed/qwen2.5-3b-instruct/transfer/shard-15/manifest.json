@@ -1,0 +1,53 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "intra_model_transfer/multi_seed/qwen2.5-3b-instruct/transfer/shard-15.json",
+  "original_bytes": 44961061,
+  "original_sha256": "ac559d4566158a61332e7f204a1b2a7fca8cf4b73e1ccd312c9a0285fcf78ea5",
+  "top_level": "array",
+  "total_records": 31250,
+  "total_chunks": 7,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 6286878,
+      "sha256": "3d38a2905e833f16aeba05365f0012136d41e58158f48ca68064a8497363d298"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 6470697,
+      "sha256": "72964602728982997bfe39a7e7ec0fb63efc48d4faf3b2163b736638d5261fa8"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 6408220,
+      "sha256": "7ad6c6f3b5ffcfdbc37fe2f0623ad39f5ea198bf12ee0384a05cfa49c6e7f5b4"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 6385230,
+      "sha256": "c58d78c682fe05aafc4a372d0219e0b2e0169c6a51140e2a6172751c82c8ebb2"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 6894682,
+      "sha256": "32e32514762f9cacbd37f016c62a1a9832a1c4c2b06abd62202b5de110146b3e"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 7110730,
+      "sha256": "d7396ec5eeef00846eccfd2345cf73ad00b398636b31e27c8edacbef7810316e"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 1250,
+      "bytes": 1802768,
+      "sha256": "a220d8ff02ea04f414bc2c685452607a7d83422545257c9321884912170360e6"
+    }
+  ]
+}

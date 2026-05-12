@@ -1,0 +1,23 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "intra_model_transfer/single_seed/llama-2-7b-chat-hf.json",
+  "original_bytes": 14386698,
+  "original_sha256": "eaa132c5b7efbf1e977754454acf4a8cda427b202311a2b820c6be5ab68fd164",
+  "top_level": "array",
+  "total_records": 10000,
+  "total_chunks": 2,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 6780441,
+      "sha256": "a37d3b4a0bb08189bb3fc373cebc78b50d927a11e1dd424d6caf669f4d85029a"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 6860354,
+      "sha256": "16c4524168a43f04c3d5ce46e8f10e195f3232cdc96341d8983e27d9bd06ddbb"
+    }
+  ]
+}

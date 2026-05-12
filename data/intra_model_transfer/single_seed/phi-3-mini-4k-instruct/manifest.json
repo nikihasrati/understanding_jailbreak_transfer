@@ -1,0 +1,23 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "intra_model_transfer/single_seed/phi-3-mini-4k-instruct.json",
+  "original_bytes": 11222871,
+  "original_sha256": "d6c5c045537d278acefbccfef109be98502678f9c98a798ed82cb299f526cd14",
+  "top_level": "array",
+  "total_records": 10000,
+  "total_chunks": 2,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 4814701,
+      "sha256": "346b12752e77a1fae6ca643ca3d0589dcf7ee8a278c90bd8b6e72b25f3aa7a55"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 5181940,
+      "sha256": "1d413e13383e1276cd1cd40d9faccb4a3d23f2f425fdc413647538f042d3e81f"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "intra_model_transfer/multi_seed/phi-3-mini-4k-instruct/transfer/shard-07.json",
+  "original_bytes": 47331197,
+  "original_sha256": "03729b6c91c55d5396b34c71fd30c29a2842db3869b5397a2442c61453fa3cbe",
+  "top_level": "array",
+  "total_records": 41664,
+  "total_chunks": 9,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 4761921,
+      "sha256": "fabe62dd54978bcc4d5f742ce0ed6161ff83bae533e46e0875174fd6733f2123"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 4559854,
+      "sha256": "81e7f069949edf6bc4678d6ba7f27099c38e7d2c32ba1b9b9e508091fa84fb10"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 4399060,
+      "sha256": "06ee62ef646a956ba5ca85371463e6cbde660d1163bedfa481e24d3812f6d2e8"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 4503226,
+      "sha256": "36658d8c8f1755400f58d5bf49cc3949a42e3e357593fab7c266dd0262c84e75"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 4830467,
+      "sha256": "f31cea835e6b2a6589d04f4aa679b3d2912246021dea7e34fa17b6e97399fc5f"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 5243451,
+      "sha256": "4c5204db10eed7d4151dbd11d1a533a02ce305736c36ac30676d4ff7ad3fb4b1"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 5000,
+      "bytes": 6297453,
+      "sha256": "cd883cdefdadf89507128ee1b88f00bb8dd4a5c524ea2a165ecf9b95956673bf"
+    },
+    {
+      "path": "chunks/chunk_00007.json",
+      "records": 5000,
+      "bytes": 6136562,
+      "sha256": "e349a0f9348780b0a001b9e92e71f16f95b962c87fbf4dfb39f74bbe4c9e3f58"
+    },
+    {
+      "path": "chunks/chunk_00008.json",
+      "records": 1664,
+      "bytes": 1975847,
+      "sha256": "dc051899c7c4027912629ba4b746a4c35314ec678b05906c7b51a805ca7d4a36"
+    }
+  ]
+}

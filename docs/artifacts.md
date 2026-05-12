@@ -20,14 +20,14 @@ data/<artifact-family>/<artifact-name>/
     chunk_00001.json
 ```
 
-Most examples use an unprefixed artifact directory such as `${MODEL_ALIAS}_multiple_seed_results_transfer`. Some published multi-seed transfer artifacts are stored as shard-prefixed directories such as `0_${MODEL_ALIAS}_multiple_seed_results_transfer`; point commands at the exact directory that contains the `manifest.json` you want to process.
+Most examples use an unsharded artifact directory such as `data/intra_model_transfer/multi_seed/${MODEL_ALIAS}/transfer/all`. Some published multi-seed transfer artifacts are stored as shard directories such as `shard-00`; point commands at the exact directory that contains the `manifest.json` you want to process.
 
 A typical manifest looks like this:
 
 ```json
 {
   "artifact_format": "chunked_json",
-  "source": "multiple_seed_results/example.json",
+  "source": "intra_model_transfer/multi_seed/example/transfer/all.json",
   "total_records": 250000,
   "total_chunks": 50,
   "chunks": [
@@ -45,8 +45,8 @@ The canonical chunk files are the source of truth in Git. Some analysis scripts 
 
 ```bash
 python -m pipeline artifacts combine-json \
-  --manifest data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer/manifest.json \
-  --output data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer/combined.json
+  --manifest data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all/manifest.json \
+  --output data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all/combined.json
 ```
 
 After creating or modifying a working JSON file, split it back into chunked form before release. The example uses `JSON_RECORDS_PER_CHUNK` so you can change chunk size in one place:
@@ -55,8 +55,8 @@ After creating or modifying a working JSON file, split it back into chunked form
 export JSON_RECORDS_PER_CHUNK=5000
 
 python -m pipeline artifacts split-json \
-  --input data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer/combined.json \
-  --output data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer \
+  --input data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all/combined.json \
+  --output data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all \
   --records-per-chunk "$JSON_RECORDS_PER_CHUNK"
 ```
 
@@ -64,7 +64,7 @@ Verify any artifact before publishing it:
 
 ```bash
 python -m pipeline artifacts verify-manifest \
-  --manifest data/multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer/manifest.json
+  --manifest data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all/manifest.json
 ```
 
 

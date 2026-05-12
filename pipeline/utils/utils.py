@@ -41,7 +41,7 @@ def get_previously_refused_suffix_indices(cfg):
 
 # Filter out entries that were jailbroken even without a suffix
 def get_transfer_df(cfg):
-    transfer_df = pd.read_json(cfg.cross_prompt_transfer_generations_path())
+    transfer_df = pd.read_json(cfg.single_seed_transfer_path())
     refused_prompt_indices = get_previously_refused_indices(cfg)
     refused_suffix_indices = get_previously_refused_suffix_indices(cfg)
     return transfer_df[

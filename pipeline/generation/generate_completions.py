@@ -81,7 +81,7 @@ def main(argv=None):
             raise ValueError('Use --suffix-push or --orth-shift with --gcg-push')
         generate_for_path(model, path, chunk_id=args.chunk_id, resume=args.resume, batch_size=args.batch_size)
     elif args.multi_seed:
-        path = cfg.multi_seed_generations_no_transfer_path() if args.no_transfer else cfg.multi_seed_generations_transfer_path()
+        path = cfg.multi_seed_no_transfer_path() if args.no_transfer else cfg.multi_seed_transfer_path()
         generate_for_path(model, path, chunk_id=None if args.no_transfer else args.chunk_id, resume=args.resume, batch_size=args.batch_size)
     else:
         prompts = pd.read_json(cfg.prompts_path()).drop(columns=['category'], errors='ignore')
@@ -89,8 +89,8 @@ def main(argv=None):
         df = prompts.merge(suffixes, how='cross')
         df['jailbreak'] = df['prompt'] + df['suffix']
         df['response'] = model.generate_completions(df['jailbreak'].to_list(), max_new_tokens=200)
-        os.makedirs(os.path.dirname(cfg.cross_prompt_transfer_generations_path()), exist_ok=True)
-        df.to_json(cfg.cross_prompt_transfer_generations_path(), orient='records', indent=2)
+        os.makedirs(os.path.dirname(cfg.single_seed_transfer_path()), exist_ok=True)
+        df.to_json(cfg.single_seed_transfer_path(), orient='records', indent=2)
 
 
 if __name__ == '__main__':

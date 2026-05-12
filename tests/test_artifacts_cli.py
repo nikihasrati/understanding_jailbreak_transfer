@@ -179,7 +179,32 @@ class ArtifactHelperTests(unittest.TestCase):
         with mock.patch('pipeline.config.pd.read_json') as read_json:
             cfg = Config('/models/meta-llama/Llama-3.2-1B-Instruct')
             self.assertEqual(cfg.model_alias, 'llama-3.2-1b-instruct')
-            self.assertTrue(cfg.prompts_path().endswith('data/processed/jailbreakbench_prompts/prompts/chunks/chunk_00000.json'))
+            self.assertTrue(cfg.prompts_path().endswith('data/processed/jailbreakbench/prompts/chunks/chunk_00000.json'))
+            self.assertTrue(
+                cfg.suffixes_path().endswith(
+                    'data/processed/jailbreakbench/suffixes/llama-3.2-1b-instruct/chunks/chunk_00000.json'
+                )
+            )
+            self.assertTrue(
+                cfg.single_seed_transfer_path().endswith(
+                    'data/intra_model_transfer/single_seed/llama-3.2-1b-instruct/combined.json'
+                )
+            )
+            self.assertTrue(
+                cfg.multi_seed_no_transfer_path().endswith(
+                    'data/intra_model_transfer/multi_seed/llama-3.2-1b-instruct/no_transfer/combined.json'
+                )
+            )
+            self.assertTrue(
+                cfg.multi_seed_transfer_path().endswith(
+                    'data/intra_model_transfer/multi_seed/llama-3.2-1b-instruct/transfer/all/combined.json'
+                )
+            )
+            self.assertEqual(cfg.single_seed_cross_prompt_transfer_generations_path(), cfg.single_seed_transfer_path())
+            self.assertEqual(cfg.multi_seed_generations_no_transfer_path(), cfg.multi_seed_no_transfer_path())
+            self.assertEqual(cfg.multi_seed_generations_transfer_path(), cfg.multi_seed_transfer_path())
+            self.assertTrue(cfg.no_suffix_generations_path().endswith('data/no_suffix_generations/llama-3.2-1b-instruct/combined.json'))
+            self.assertTrue(cfg.prompt_rephrasings_path().endswith('data/prompt_rephrasings/llama-3.2-1b-instruct/combined.json'))
             read_json.assert_not_called()
 
             with tempfile.TemporaryDirectory() as tmp:

@@ -46,25 +46,34 @@ class Config:
         return self._model_name(self.model_alias)
 
     def prompts_path(self) -> str:
-        return self._path(self.PROCESSED_DATASET_DIR, 'jailbreakbench_prompts', 'prompts', 'chunks', 'chunk_00000.json')
+        return self._path(self.PROCESSED_DATASET_DIR, 'jailbreakbench', 'prompts', 'chunks', 'chunk_00000.json')
 
     def suffixes_path(self) -> str:
-        return self._path(self.PROCESSED_DATASET_DIR, 'jailbreakbench_suffixes', f'{self.model_alias}_suffixes', 'chunks', 'chunk_00000.json')
+        return self._path(self.PROCESSED_DATASET_DIR, 'jailbreakbench', 'suffixes', self.model_alias, 'chunks', 'chunk_00000.json')
 
-    def cross_prompt_transfer_generations_path(self) -> str:
-        return self._path(self.DATASET_DIR, 'cross_prompt_transfer_generations', f'{self.model_alias}_cross_prompt_transfer_generations', 'combined.json')
+    def single_seed_transfer_path(self) -> str:
+        return self._path(self.DATASET_DIR, 'intra_model_transfer', 'single_seed', self.model_alias, 'combined.json')
+
+    def single_seed_cross_prompt_transfer_generations_path(self) -> str:
+        return self.single_seed_transfer_path()
 
     def cross_model_transfer_generations_dir(self) -> str:
         return self._path(self.DATASET_DIR, 'cross_model_transfer_generations')
 
     def no_suffix_generations_path(self) -> str:
-        return self._path(self.DATASET_DIR, 'no_suffix_generations', f'{self.model_alias}_no_suffix_generations', 'combined.json')
+        return self._path(self.DATASET_DIR, 'no_suffix_generations', self.model_alias, 'combined.json')
+
+    def multi_seed_no_transfer_path(self) -> str:
+        return self._path(self.DATASET_DIR, 'intra_model_transfer', 'multi_seed', self.model_alias, 'no_transfer', 'combined.json')
+
+    def multi_seed_transfer_path(self) -> str:
+        return self._path(self.DATASET_DIR, 'intra_model_transfer', 'multi_seed', self.model_alias, 'transfer', 'all', 'combined.json')
 
     def multi_seed_generations_no_transfer_path(self) -> str:
-        return self._path(self.DATASET_DIR, 'multiple_seed_results', self.model_alias, 'no_transfer', f'{self.model_alias}_multiple_seed_results_no_transfer', 'combined.json')
+        return self.multi_seed_no_transfer_path()
 
     def multi_seed_generations_transfer_path(self) -> str:
-        return self._path(self.DATASET_DIR, 'multiple_seed_results', self.model_alias, 'transfer', f'{self.model_alias}_multiple_seed_results_transfer', 'combined.json')
+        return self.multi_seed_transfer_path()
 
     def multi_seed_generations_transfer_dir(self) -> str:
         return str(self._path_obj(self.multi_seed_generations_transfer_path()).parent)
@@ -103,7 +112,7 @@ class Config:
         return self._path(self.DATASET_DIR, 'prompt_rephrasings')
 
     def prompt_rephrasings_path(self) -> str:
-        return self._path(self.prompt_rephrasings_dir(), f'{self.model_alias}_prompt_rephrasings', 'combined.json')
+        return self._path(self.prompt_rephrasings_dir(), self.model_alias, 'combined.json')
 
     def unprocessed_prompt_rephrasings_path(self) -> str:
         return self._path(self.prompt_rephrasings_dir(), f'{self.model_alias}_unprocessed_rephrasings.json')

@@ -73,11 +73,11 @@ def get_filtered_zero_df(zero_df: pd.DataFrame, coeff_df: pd.DataFrame) -> pd.Da
 
 def no_suffix_path(config: dict[str, Any]) -> Path:
     alias = gcg_config.model_alias(config)
-    return gcg_config.REPO_ROOT / 'data' / 'no_suffix_generations' / f'{alias}_no_suffix_generations'
+    return gcg_config.REPO_ROOT / 'data' / 'no_suffix_generations' / alias
 
 
 def baseline_transfer_dir(config: dict[str, Any]) -> Path:
-    return gcg_config.REPO_ROOT / 'data' / 'multiple_seed_results' / gcg_config.model_alias(config) / 'transfer'
+    return gcg_config.REPO_ROOT / 'data' / 'intra_model_transfer' / 'multi_seed' / gcg_config.model_alias(config) / 'transfer'
 
 
 def analyze_one(config: dict[str, Any], zero_df: pd.DataFrame, no_suffix_df: pd.DataFrame, intervention: str, coeff: str) -> dict[str, Any]:

@@ -1,0 +1,65 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "intra_model_transfer/multi_seed/phi-3-mini-4k-instruct/transfer/shard-16.json",
+  "original_bytes": 42893925,
+  "original_sha256": "7f8787362b8012409c45b6794ff1fda823673498b138887508d7f18be489e692",
+  "top_level": "array",
+  "total_records": 41672,
+  "total_chunks": 9,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 4291108,
+      "sha256": "69f926e1329b03891f55820a5d8286b9be66f54c920a150b100834dec2d6cb39"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 4679399,
+      "sha256": "3cfa2a14c4bea1710f52e91753e0029679129d04a9203179a404bff104b9a495"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 4616773,
+      "sha256": "2ba9ee24d4ae10dd870dce2736b0ca2d62c688aae6e7ad79bbccba8404d4af32"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 4488632,
+      "sha256": "31e10bba65f5fb3d7d1c824ffccec96311e71c4a310d515143428217c928e7f5"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 4244324,
+      "sha256": "6d2cf9392c47758d6412d8250af2342ed5cd34084cc4991c28d4af752748fbde"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 3690158,
+      "sha256": "af78d78dcecdc124c648a64cd4b6d604754ffb58fd0e47222789b81cb1836af2"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 5000,
+      "bytes": 4307878,
+      "sha256": "37e089a8a5e60833da01abfa44d2e39e2efe3df7b5c04cb422a424b7e8dcbd04"
+    },
+    {
+      "path": "chunks/chunk_00007.json",
+      "records": 5000,
+      "bytes": 5956348,
+      "sha256": "c32c78d0f6e7ca9ef3aed4d67285c598893d48e36661f29f95392ded93d22fac"
+    },
+    {
+      "path": "chunks/chunk_00008.json",
+      "records": 1672,
+      "bytes": 1975357,
+      "sha256": "9f5329aa19637d2bdfb61c00a4a5de11d01436aebf701ce0f39c4be612c930a5"
+    }
+  ]
+}

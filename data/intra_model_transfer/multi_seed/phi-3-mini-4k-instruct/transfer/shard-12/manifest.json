@@ -1,0 +1,65 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "intra_model_transfer/multi_seed/phi-3-mini-4k-instruct/transfer/shard-12.json",
+  "original_bytes": 48069912,
+  "original_sha256": "a6f5a813b6c4b1b6798e4afa98b09747fc752b4db8c0415ce28540519876e276",
+  "top_level": "array",
+  "total_records": 41664,
+  "total_chunks": 9,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 6621216,
+      "sha256": "1cb196ea9ecb722c81a78df54daee930df7f547ecc34f1068ba80c0f92169d1d"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 6668922,
+      "sha256": "5408b84f9f06b069cf092c7b0afc6769b2ee75defbd973d6b5d7b7ab20e5dba6"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 5625877,
+      "sha256": "c4ecbfb590db21006828dbdab674d3b81c81c1467848f3a65b986330f5729d0c"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 5679036,
+      "sha256": "19e731a17ac31814a60410fd0957fe509ea8b91ae1cb07b5e7e6db1b985540b7"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 3673744,
+      "sha256": "8128a8409e32461cb9f4845048a18c7f2703b8e01f73a17f23efdbe3f383faff"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 3589324,
+      "sha256": "890e4477541a60b262bd085a29fd94125380c76ab2ac8567d666e457529ccefa"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 5000,
+      "bytes": 4810809,
+      "sha256": "c19d7d3ff899738c9f7b0671f54c8bbf8fb247ce87d6f056240415005f7fdfb0"
+    },
+    {
+      "path": "chunks/chunk_00007.json",
+      "records": 5000,
+      "bytes": 4694129,
+      "sha256": "4068bd3ef998c325bfdbb2f4ce4ea183b92d9b69510671821d2599620c40e727"
+    },
+    {
+      "path": "chunks/chunk_00008.json",
+      "records": 1664,
+      "bytes": 2092832,
+      "sha256": "9cba6ef68483a6fa1f9ef50f28e0f8021668489e1d607b7e775045fcaf3532b1"
+    }
+  ]
+}

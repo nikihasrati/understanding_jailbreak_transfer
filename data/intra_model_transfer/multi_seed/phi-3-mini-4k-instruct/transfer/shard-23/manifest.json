@@ -1,0 +1,65 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "intra_model_transfer/multi_seed/phi-3-mini-4k-instruct/transfer/shard-23.json",
+  "original_bytes": 46180059,
+  "original_sha256": "23bf11e49232e94483f41b91490153b9a4034733c361ef719d72760766c7dd51",
+  "top_level": "array",
+  "total_records": 41672,
+  "total_chunks": 9,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 5000,
+      "bytes": 5112464,
+      "sha256": "9a50c570ddb0742f8eaa0e8c941705a4e8ba0c437a865eb7675e337471bdbdae"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 5000,
+      "bytes": 5226362,
+      "sha256": "e667a8a938bc491bb67292c50bdc6df4ff81216a9ba68f4666dba3203696b162"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 5000,
+      "bytes": 5063336,
+      "sha256": "624edeb46d3a409079743f958976972ea3e1c906274dabd45fd2f90a082e5552"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 5000,
+      "bytes": 4826200,
+      "sha256": "12ad3410ef29eaccb4bbb4e96bf8456d6bcb213cc0486d56577dd44f11d604f5"
+    },
+    {
+      "path": "chunks/chunk_00004.json",
+      "records": 5000,
+      "bytes": 4762630,
+      "sha256": "e608406b540a0181161230c8eb2ac6c0fe0dbb98372b8ce88d79ee871880e685"
+    },
+    {
+      "path": "chunks/chunk_00005.json",
+      "records": 5000,
+      "bytes": 4627035,
+      "sha256": "fce56a43f2412379bdab608896983e8515abdbe02641fad5828fcf02e1713eed"
+    },
+    {
+      "path": "chunks/chunk_00006.json",
+      "records": 5000,
+      "bytes": 5021907,
+      "sha256": "4361ae3b775a7246f301dcfe1d5838117088fbc07492f059c52cd29029d50261"
+    },
+    {
+      "path": "chunks/chunk_00007.json",
+      "records": 5000,
+      "bytes": 5153803,
+      "sha256": "6c659df32e9b038db97c62ced9b1e325791f7c7209d9780ce9f4f30f01687688"
+    },
+    {
+      "path": "chunks/chunk_00008.json",
+      "records": 1672,
+      "bytes": 1791671,
+      "sha256": "b5238a52c4015e1798fe5dbd506b4e1bb0841af3f53fe86960a639a433c23017"
+    }
+  ]
+}

@@ -116,7 +116,7 @@ Run this for all prompt indices. On Slurm, use an array job where `SLURM_ARRAY_T
 Set these variables for this step:
 
 ```bash
-export OUTPUT_ROOT=data/multiple_seed_results
+export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
 export EXPECTED_PROMPTS=100
 export EXPECTED_SEEDS=100
 ```
@@ -133,7 +133,7 @@ python -m pipeline suffixes create-datasets \
 
 Use the printed check output before continuing. If prompts or seeds are missing, rerun suffix generation for the missing prompt/seed combinations.
 
-**Output:** Initial no-transfer and transfer JSON arrays are saved under `$OUTPUT_ROOT/$MODEL_ALIAS/{no_transfer,transfer}/`.
+**Output:** Initial no-transfer and transfer JSON arrays are saved as `$OUTPUT_ROOT/$MODEL_ALIAS/{no_transfer,transfer}/records.json`.
 
 ## 3. Canonical JSON Artifacts
 
@@ -146,14 +146,14 @@ After generating a large JSON array, split it into canonical chunks.
 Set these variables for this step:
 
 ```bash
-export OUTPUT_ROOT=data/multiple_seed_results
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
 export JSON_RECORDS_PER_CHUNK=5000
 ```
 
 ```bash
 python -m pipeline artifacts split-json \
-  --input "$ARTIFACT_DIR/combined.json" \
+  --input "$OUTPUT_ROOT/$MODEL_ALIAS/transfer/records.json" \
   --output "$ARTIFACT_DIR" \
   --records-per-chunk "$JSON_RECORDS_PER_CHUNK"
 
@@ -172,8 +172,8 @@ Generation jobs should not modify canonical `chunks/` directly. `pipeline artifa
 Set these variables for this step:
 
 ```bash
-export OUTPUT_ROOT=data/multiple_seed_results
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
 export NUM_GENERATION_CHUNKS=32
 ```
 
@@ -197,8 +197,8 @@ python -m pipeline artifacts prepare-generation \
 Set these variables for this step:
 
 ```bash
-export OUTPUT_ROOT=data/multiple_seed_results
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
 export NUM_GENERATION_CHUNKS=32
 export GENERATION_CHUNK_ID=0
 ```
@@ -234,8 +234,8 @@ Evaluation uses the Llama 3 jailbreak judge and typically needs more GPUs per jo
 Set these variables for this step:
 
 ```bash
-export OUTPUT_ROOT=data/multiple_seed_results
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
 export NUM_EVALUATION_CHUNKS=8
 ```
 
@@ -261,8 +261,8 @@ python -m pipeline artifacts combine-completions \
 Set these variables for this step:
 
 ```bash
-export OUTPUT_ROOT=data/multiple_seed_results
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
 export EVALUATION_CHUNK_ID=0
 export NUM_JUDGE_GPUS=4
 ```
@@ -297,8 +297,8 @@ After evaluation is complete, replace canonical `chunks/` with the evaluated rec
 Set these variables for this step:
 
 ```bash
-export OUTPUT_ROOT=data/multiple_seed_results
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
 export NUM_PUBLISHED_CHUNKS=50
 ```
 
@@ -310,7 +310,7 @@ python -m pipeline artifacts combine-completions \
   --num-output-chunks "$NUM_PUBLISHED_CHUNKS" \
   --check-stage evaluation \
   --write-manifest \
-  --manifest-source multiple_seed_results/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer
+  --manifest-source intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all
 
 python -m pipeline artifacts verify-manifest \
   --manifest "$ARTIFACT_DIR/manifest.json"
@@ -329,8 +329,8 @@ Run `python -m pipeline completions normalize-labels` when imported artifacts or
 Set these variables for this step:
 
 ```bash
-export OUTPUT_ROOT=data/multiple_seed_results
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/${MODEL_ALIAS}_multiple_seed_results_transfer"
+export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
 ```
 
 ```bash
@@ -352,7 +352,7 @@ The no-suffix baseline asks the model to answer each harmful prompt without an a
 Set these variables for this step:
 
 ```bash
-export NO_SUFFIX_ARTIFACT_DIR="data/no_suffix_generations/${MODEL_ALIAS}_no_suffix_generations"
+export NO_SUFFIX_ARTIFACT_DIR="data/no_suffix_generations/${MODEL_ALIAS}"
 export NUM_JUDGE_GPUS=4
 ```
 
@@ -367,7 +367,7 @@ python -m pipeline completions evaluate \
   --num-gpus "$NUM_JUDGE_GPUS"
 ```
 
-**Output:** No-suffix responses and `jailbroken` labels are saved under `data/no_suffix_generations/${MODEL_ALIAS}_no_suffix_generations/`, usually as `combined.json` plus any chunked release files you create from it.
+**Output:** No-suffix responses and `jailbroken` labels are saved under `data/no_suffix_generations/${MODEL_ALIAS}/`, usually as `combined.json` plus any chunked release files you create from it.
 
 ## 11. Refusal Directions
 
@@ -587,4 +587,4 @@ python -m pipeline completions evaluate \
   --num-gpus "$NUM_JUDGE_GPUS"
 ```
 
-**Output:** Prompt-rephrasing records are saved under `data/prompt_rephrasings/${MODEL_ALIAS}_prompt_rephrasings/`, with `generation_chunks/`, `evaluation_chunks/`, and final canonical `chunks/` following the same lifecycle as the main transfer artifacts.
+**Output:** Prompt-rephrasing records are saved under `data/prompt_rephrasings/${MODEL_ALIAS}/`, with `generation_chunks/`, `evaluation_chunks/`, and final canonical `chunks/` following the same lifecycle as the main transfer artifacts.

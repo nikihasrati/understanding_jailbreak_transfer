@@ -73,8 +73,8 @@ def main(argv=None):
     elif args.multi_seed:
         print("Evaluating multi-seed generations")
         # Evaluate multi-seed generations
-        # evaluate_generations(jailbreak_judge, data_path=cfg.multi_seed_generations_no_transfer_path(), chunk_id=None)
-        evaluate_generations(jailbreak_judge, data_path=cfg.multi_seed_generations_transfer_path(), chunk_id=args.chunk_id)
+        # evaluate_generations(jailbreak_judge, data_path=cfg.multi_seed_no_transfer_path(), chunk_id=None)
+        evaluate_generations(jailbreak_judge, data_path=cfg.multi_seed_transfer_path(), chunk_id=args.chunk_id)
     elif args.rephrasings:
         print("Evaluating rephrasing completions")
         # Evaluate rephrasing completions
@@ -95,7 +95,7 @@ def main(argv=None):
     else:
         print("Evaluating cross prompt transfer generations")
         # Evaluate cross prompt transfer generations
-        evaluate_generations(jailbreak_judge, data_path=cfg.cross_prompt_transfer_generations_path(), chunk_id=None)
+        evaluate_generations(jailbreak_judge, data_path=cfg.single_seed_transfer_path(), chunk_id=None)
 
 
 if __name__ == "__main__":

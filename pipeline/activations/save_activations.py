@@ -25,9 +25,9 @@ def load_inputs(cfg: Config, input_kind: str):
     if input_kind == 'suffixes':
         return pd.read_json(cfg.suffixes_path())['suffix'].to_list(), cfg.suffix_activations_path()
     if input_kind == 'cross_prompt_jailbreak':
-        return pd.read_json(cfg.cross_prompt_transfer_generations_path())['jailbreak'].to_list(), cfg.jailbreak_activations_dir()
+        return pd.read_json(cfg.single_seed_transfer_path())['jailbreak'].to_list(), cfg.jailbreak_activations_dir()
     if input_kind == 'multi_seed_jailbreak':
-        return pd.read_json(cfg.multi_seed_generations_transfer_path())['jailbreak'].to_list(), cfg.multi_seed_jailbreak_activations_transfer_dir()
+        return pd.read_json(cfg.multi_seed_transfer_path())['jailbreak'].to_list(), cfg.multi_seed_jailbreak_activations_transfer_dir()
     raise ValueError(input_kind)
 
 
