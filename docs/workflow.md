@@ -28,7 +28,7 @@ For full paper-scale runs, use the recommended Slurm workflow in [slurm_workflow
 
 ## Chunking Convention
 
-This repo separates canonical artifacts from temporary job shards:
+This repo separates canonical artifacts from temporary job chunks:
 
 ```text
 chunks/              canonical published chunks committed with manifest.json
@@ -147,7 +147,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export JSON_RECORDS_PER_CHUNK=5000
 ```
 
@@ -155,7 +155,8 @@ export JSON_RECORDS_PER_CHUNK=5000
 python -m pipeline artifacts split-json \
   --input "$OUTPUT_ROOT/$MODEL_ALIAS/transfer/records.json" \
   --output "$ARTIFACT_DIR" \
-  --records-per-chunk "$JSON_RECORDS_PER_CHUNK"
+  --records-per-chunk "$JSON_RECORDS_PER_CHUNK" \
+  --manifest-source intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer
 
 python -m pipeline artifacts verify-manifest \
   --manifest "$ARTIFACT_DIR/manifest.json"
@@ -173,7 +174,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export NUM_GENERATION_CHUNKS=32
 ```
 
@@ -184,7 +185,7 @@ python -m pipeline artifacts prepare-generation \
   --input-column jailbreak
 ```
 
-**Output:** Temporary generation shards are saved to `$ARTIFACT_DIR/generation_chunks/chunk_*.json`.
+**Output:** Temporary generation chunks are saved to `$ARTIFACT_DIR/generation_chunks/chunk_*.json`.
 
 ## 5. Generate Completions
 
@@ -198,7 +199,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export NUM_GENERATION_CHUNKS=32
 export GENERATION_CHUNK_ID=0
 ```
@@ -229,13 +230,13 @@ The generation script also checks its own chunk before exiting. The full check a
 
 **Paper connection:** Operational setup for the Section 4 jailbreak-judge evaluation step.
 
-Evaluation uses the Llama 3 jailbreak judge and typically needs more GPUs per job than generation, so use fewer chunks for this step. Set `NUM_JUDGE_GPUS` to the GPU count for your judge jobs. `pipeline artifacts combine-completions` verifies that all `response` fields are populated before writing `evaluation_chunks/`. This is the replacement for the old combine step: it both checks completeness and changes the shard count for the judge workload.
+Evaluation uses the Llama 3 jailbreak judge and typically needs more GPUs per job than generation, so use fewer chunks for this step. Set `NUM_JUDGE_GPUS` to the GPU count for your judge jobs. `pipeline artifacts combine-completions` verifies that all `response` fields are populated before writing `evaluation_chunks/`. This is the replacement for the old combine step: it both checks completeness and changes the chunk count for the judge workload.
 
 Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export NUM_EVALUATION_CHUNKS=8
 ```
 
@@ -248,7 +249,7 @@ python -m pipeline artifacts combine-completions \
   --check-stage generation
 ```
 
-**Output:** Judge-ready temporary shards are saved to `$ARTIFACT_DIR/evaluation_chunks/chunk_*.json`. The command fails if any `response` field is missing.
+**Output:** Judge-ready temporary chunks are saved to `$ARTIFACT_DIR/evaluation_chunks/chunk_*.json`. The command fails if any `response` field is missing.
 
 ## 7. Evaluate Completions
 
@@ -262,7 +263,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export EVALUATION_CHUNK_ID=0
 export NUM_JUDGE_GPUS=4
 ```
@@ -298,8 +299,8 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
-export NUM_PUBLISHED_CHUNKS=50
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
+export NUM_PUBLISHED_CHUNKS=200
 ```
 
 ```bash
@@ -310,7 +311,7 @@ python -m pipeline artifacts combine-completions \
   --num-output-chunks "$NUM_PUBLISHED_CHUNKS" \
   --check-stage evaluation \
   --write-manifest \
-  --manifest-source intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all
+  --manifest-source intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer
 
 python -m pipeline artifacts verify-manifest \
   --manifest "$ARTIFACT_DIR/manifest.json"
@@ -330,7 +331,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 ```
 
 ```bash
@@ -449,7 +450,7 @@ python -m pipeline cross-model setup \
   --num-chunks "$NUM_CROSS_MODEL_GENERATION_CHUNKS"
 ```
 
-This writes `generation_chunks/` for the source-target pair. Generate responses, check them, re-shard into `evaluation_chunks/`, and evaluate:
+This writes `generation_chunks/` for the source-target pair. Generate responses, check them, re-split into `evaluation_chunks/`, and evaluate:
 
 ```bash
 python -m pipeline cross-model generate \

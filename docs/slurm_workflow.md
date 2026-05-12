@@ -28,7 +28,7 @@ Slurm is an HPC workload manager/job scheduler. It is the recommended path for f
 
 ## Chunking Convention
 
-This repo separates canonical artifacts from temporary job shards:
+This repo separates canonical artifacts from temporary job chunks:
 
 ```text
 chunks/              canonical published chunks committed with manifest.json
@@ -143,7 +143,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export JSON_RECORDS_PER_CHUNK=5000
 ```
 
@@ -151,7 +151,8 @@ export JSON_RECORDS_PER_CHUNK=5000
 python -m pipeline artifacts split-json \
   --input "$OUTPUT_ROOT/$MODEL_ALIAS/transfer/records.json" \
   --output "$ARTIFACT_DIR" \
-  --records-per-chunk "$JSON_RECORDS_PER_CHUNK"
+  --records-per-chunk "$JSON_RECORDS_PER_CHUNK" \
+  --manifest-source intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer
 
 python -m pipeline artifacts verify-manifest \
   --manifest "$ARTIFACT_DIR/manifest.json"
@@ -169,7 +170,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export NUM_GENERATION_CHUNKS=32
 ```
 
@@ -180,7 +181,7 @@ python -m pipeline artifacts prepare-generation \
   --input-column jailbreak
 ```
 
-**Output:** Temporary generation shards are saved to `$ARTIFACT_DIR/generation_chunks/chunk_*.json`.
+**Output:** Temporary generation chunks are saved to `$ARTIFACT_DIR/generation_chunks/chunk_*.json`.
 
 ## 5. Generate Completions
 
@@ -192,7 +193,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export NUM_GENERATION_CHUNKS=32
 export GENERATION_ARRAY_START=0
 export GENERATION_ARRAY_END=$((NUM_GENERATION_CHUNKS - 1))
@@ -227,7 +228,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export NUM_EVALUATION_CHUNKS=8
 ```
 
@@ -240,7 +241,7 @@ python -m pipeline artifacts combine-completions \
   --check-stage generation
 ```
 
-**Output:** Judge-ready temporary shards are saved to `$ARTIFACT_DIR/evaluation_chunks/chunk_*.json`. The command fails if any `response` field is missing.
+**Output:** Judge-ready temporary chunks are saved to `$ARTIFACT_DIR/evaluation_chunks/chunk_*.json`. The command fails if any `response` field is missing.
 
 ## 7. Evaluate Completions
 
@@ -252,7 +253,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 export NUM_EVALUATION_CHUNKS=8
 export EVALUATION_ARRAY_START=0
 export EVALUATION_ARRAY_END=$((NUM_EVALUATION_CHUNKS - 1))
@@ -291,8 +292,8 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
-export NUM_PUBLISHED_CHUNKS=50
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
+export NUM_PUBLISHED_CHUNKS=200
 ```
 
 ```bash
@@ -303,7 +304,7 @@ python -m pipeline artifacts combine-completions \
   --num-output-chunks "$NUM_PUBLISHED_CHUNKS" \
   --check-stage evaluation \
   --write-manifest \
-  --manifest-source intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all
+  --manifest-source intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer
 
 python -m pipeline artifacts verify-manifest \
   --manifest "$ARTIFACT_DIR/manifest.json"
@@ -323,7 +324,7 @@ Set these variables for this step:
 
 ```bash
 export OUTPUT_ROOT=data/intra_model_transfer/multi_seed
-export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer/all"
+export ARTIFACT_DIR="$OUTPUT_ROOT/$MODEL_ALIAS/transfer"
 ```
 
 ```bash
@@ -557,7 +558,7 @@ python -m pipeline gcg-push launch \
   --submit
 ```
 
-The evaluation stage reshards `generation_chunks/` into fewer `evaluation_chunks/` for the multi-GPU jailbreak judge, then submits judge array jobs. After the evaluation arrays finish, promote evaluated records back to canonical published chunks:
+The evaluation stage re-splits `generation_chunks/` into fewer `evaluation_chunks/` for the multi-GPU jailbreak judge, then submits judge array jobs. After the evaluation arrays finish, promote evaluated records back to canonical published chunks:
 
 ```bash
 python -m pipeline gcg-push launch \

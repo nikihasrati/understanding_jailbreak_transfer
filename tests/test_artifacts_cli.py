@@ -14,6 +14,7 @@ from pipeline.config import Config
 from pipeline.evaluation.evaluate_completions import evaluate_generations, parse_arguments as parse_evaluation_legacy
 from pipeline.evaluation.evaluate_completions import parse_args as parse_evaluation_args
 from pipeline.generation.generate_completions import generate_for_path
+from tools.split_json_records import main as split_json_records_main
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -79,6 +80,36 @@ class ArtifactHelperTests(unittest.TestCase):
                 + '\n'
             )
             artifacts.verify_manifest(file_manifest)
+
+    def test_split_json_records_writes_flat_artifact_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            src = root / 'records.json'
+            out = root / 'artifact'
+            stale_dir = out / 'chunks'
+            stale_dir.mkdir(parents=True)
+            (stale_dir / 'chunk_99999.json').write_text('[]\n')
+            src.write_text(json.dumps([{'id': i} for i in range(5)], indent=2) + '\n')
+
+            split_json_records_main([
+                '--input',
+                str(src),
+                '--output',
+                str(out),
+                '--records-per-chunk',
+                '2',
+                '--manifest-source',
+                'intra_model_transfer/multi_seed/example/transfer',
+            ])
+
+            manifest = json.loads((out / 'manifest.json').read_text())
+            self.assertEqual(manifest['source'], 'intra_model_transfer/multi_seed/example/transfer')
+            self.assertEqual(manifest['top_level'], 'array')
+            self.assertEqual(manifest['total_records'], 5)
+            self.assertEqual(manifest['total_chunks'], 3)
+            self.assertEqual([chunk['records'] for chunk in manifest['chunks']], [2, 2, 1])
+            self.assertFalse((stale_dir / 'chunk_99999.json').exists())
+            artifacts.verify_manifest(out / 'manifest.json')
 
     def test_workflow_chunk_path_uses_stage_specific_temporary_chunks(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -197,7 +228,7 @@ class ArtifactHelperTests(unittest.TestCase):
             )
             self.assertTrue(
                 cfg.multi_seed_transfer_path().endswith(
-                    'data/intra_model_transfer/multi_seed/llama-3.2-1b-instruct/transfer/all/combined.json'
+                    'data/intra_model_transfer/multi_seed/llama-3.2-1b-instruct/transfer/combined.json'
                 )
             )
             self.assertEqual(cfg.single_seed_cross_prompt_transfer_generations_path(), cfg.single_seed_transfer_path())

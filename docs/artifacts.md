@@ -20,14 +20,14 @@ data/<artifact-family>/<artifact-name>/
     chunk_00001.json
 ```
 
-Most examples use an unsharded artifact directory such as `data/intra_model_transfer/multi_seed/${MODEL_ALIAS}/transfer/all`. Some published multi-seed transfer artifacts are stored as shard directories such as `shard-00`; point commands at the exact directory that contains the `manifest.json` you want to process.
+Most examples use an artifact directory such as `data/intra_model_transfer/multi_seed/${MODEL_ALIAS}/transfer`, where `manifest.json` indexes the canonical `chunks/` directory.
 
 A typical manifest looks like this:
 
 ```json
 {
   "artifact_format": "chunked_json",
-  "source": "intra_model_transfer/multi_seed/example/transfer/all.json",
+  "source": "intra_model_transfer/multi_seed/example/transfer",
   "total_records": 250000,
   "total_chunks": 50,
   "chunks": [
@@ -45,8 +45,8 @@ The canonical chunk files are the source of truth in Git. Some analysis scripts 
 
 ```bash
 python -m pipeline artifacts combine-json \
-  --manifest data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all/manifest.json \
-  --output data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all/combined.json
+  --manifest data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/manifest.json \
+  --output data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/combined.json
 ```
 
 After creating or modifying a working JSON file, split it back into chunked form before release. The example uses `JSON_RECORDS_PER_CHUNK` so you can change chunk size in one place:
@@ -55,16 +55,17 @@ After creating or modifying a working JSON file, split it back into chunked form
 export JSON_RECORDS_PER_CHUNK=5000
 
 python -m pipeline artifacts split-json \
-  --input data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all/combined.json \
-  --output data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all \
-  --records-per-chunk "$JSON_RECORDS_PER_CHUNK"
+  --input data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/combined.json \
+  --output data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer \
+  --records-per-chunk "$JSON_RECORDS_PER_CHUNK" \
+  --manifest-source intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer
 ```
 
 Verify any artifact before publishing it:
 
 ```bash
 python -m pipeline artifacts verify-manifest \
-  --manifest data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/all/manifest.json
+  --manifest data/intra_model_transfer/multi_seed/$MODEL_ALIAS/transfer/manifest.json
 ```
 
 
@@ -89,7 +90,7 @@ The intended lifecycle is:
 chunks/ -> generation_chunks/ -> evaluation_chunks/ -> chunks/ + manifest.json
 ```
 
-Use `python -m pipeline artifacts prepare-generation` to create `generation_chunks/` from a manifest. Use `python -m pipeline artifacts combine-completions` to re-shard `generation_chunks/` into `evaluation_chunks/`, and later to promote evaluated records back into canonical `chunks/`. `python -m pipeline artifacts check-completions` checks that each generation record has a `response` and that each evaluated record has a `jailbroken` label before the artifact is promoted.
+Use `python -m pipeline artifacts prepare-generation` to create `generation_chunks/` from a manifest. Use `python -m pipeline artifacts combine-completions` to re-split `generation_chunks/` into `evaluation_chunks/`, and later to promote evaluated records back into canonical `chunks/`. `python -m pipeline artifacts check-completions` checks that each generation record has a `response` and that each evaluated record has a `jailbroken` label before the artifact is promoted.
 
 ## Raw GCG Results
 

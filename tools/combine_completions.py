@@ -6,7 +6,7 @@ from pipeline.artifacts import count_missing_fields, load_chunk_records, require
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description='Combine generated completion shards and re-split them for evaluation or publication.')
+    parser = argparse.ArgumentParser(description='Combine generated completion chunks and re-split them for evaluation or publication.')
     parser.add_argument('--input-dir', required=True, help='Artifact directory containing generation_chunks/ or evaluation_chunks/.')
     parser.add_argument('--input-subdir', default='generation_chunks')
     parser.add_argument('--output-dir', default=None, help='Artifact directory to write to. Defaults to --input-dir.')

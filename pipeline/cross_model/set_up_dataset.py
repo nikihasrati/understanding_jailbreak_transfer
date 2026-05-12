@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 
+from pipeline.artifacts import load_artifact_dataframe
 from pipeline.config import Config
 
 def parse_args(argv=None):
@@ -15,7 +16,7 @@ def parse_args(argv=None):
 def set_up_dataset(source_cfg, target_cfg, num_chunks=1):
     prompts_df = pd.read_json(source_cfg.prompts_path()).drop(columns=['category'])
     source_suffixes_df = pd.read_json(source_cfg.suffixes_path())
-    source_multi_seed_no_transfer_df = pd.read_json(source_cfg.multi_seed_generations_no_transfer_path())
+    source_multi_seed_no_transfer_df = load_artifact_dataframe(source_cfg.multi_seed_generations_no_transfer_path())
     
     # Add GCG loss and num_steps to source_suffixes_df
     source_suffixes_df = (

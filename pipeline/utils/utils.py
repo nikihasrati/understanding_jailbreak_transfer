@@ -2,11 +2,12 @@ import json
 import os
 import torch
 import math
+from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from matplotlib.colors import ListedColormap
-from pipeline.artifacts import json_chunk_paths
+from pipeline.artifacts import json_chunk_paths, load_artifact_dataframe
 
 # Open a list of json files and load them into a single list
 def load_json_files(file_paths: list[str]):
@@ -22,6 +23,7 @@ def load_json_files(file_paths: list[str]):
 
     return data
 
+
 def get_refusal_direction(refusal_dir):
     file_path = os.path.join(refusal_dir, 'direction.pt')
     return torch.load(file_path, weights_only=True).to('cuda').float()
@@ -31,7 +33,7 @@ def get_refusal_directions(refusal_dir):
 
 # Get the indices of the prompts that were refused/not jailbroken without a suffix
 def get_previously_refused_indices(cfg):
-    no_suffix_df = pd.read_json(cfg.no_suffix_generations_path())
+    no_suffix_df = load_artifact_dataframe(cfg.no_suffix_generations_path())
     return no_suffix_df.loc[~no_suffix_df['jailbroken'], 'prompt_id']
 
 def get_previously_refused_suffix_indices(cfg):
@@ -41,7 +43,7 @@ def get_previously_refused_suffix_indices(cfg):
 
 # Filter out entries that were jailbroken even without a suffix
 def get_transfer_df(cfg):
-    transfer_df = pd.read_json(cfg.single_seed_transfer_path())
+    transfer_df = load_artifact_dataframe(cfg.single_seed_transfer_path())
     refused_prompt_indices = get_previously_refused_indices(cfg)
     refused_suffix_indices = get_previously_refused_suffix_indices(cfg)
     return transfer_df[
@@ -132,6 +134,11 @@ def get_jailbreak_activations(cfg):
 # and are sorted in the order they should be concatenated
 # Returns a dataframe
 def concat_json_files_in_dir(dir_path):
+    dir_path = Path(dir_path)
+    chunks_dir = dir_path / 'chunks'
+    if chunks_dir.is_dir():
+        dir_path = chunks_dir
+
     all_data = []
     for file_path in json_chunk_paths(dir_path):
         with open(file_path, 'r') as f:

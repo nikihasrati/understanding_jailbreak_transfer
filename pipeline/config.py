@@ -67,7 +67,7 @@ class Config:
         return self._path(self.DATASET_DIR, 'intra_model_transfer', 'multi_seed', self.model_alias, 'no_transfer', 'combined.json')
 
     def multi_seed_transfer_path(self) -> str:
-        return self._path(self.DATASET_DIR, 'intra_model_transfer', 'multi_seed', self.model_alias, 'transfer', 'all', 'combined.json')
+        return self._path(self.DATASET_DIR, 'intra_model_transfer', 'multi_seed', self.model_alias, 'transfer', 'combined.json')
 
     def multi_seed_generations_no_transfer_path(self) -> str:
         return self.multi_seed_no_transfer_path()

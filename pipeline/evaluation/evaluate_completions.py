@@ -13,7 +13,7 @@ def parse_args(argv=None):
     parser.add_argument('--model-path', '--model_path', dest='model_path', type=str, required=True, help='Path to the model')
     parser.add_argument('--num-gpus', '--num_gpus', dest='num_gpus', type=int, required=False, help='The number of GPUs available')
     parser.add_argument('--multi-seed', '--multi_seed', dest='multi_seed', action=argparse.BooleanOptionalAction)
-    parser.add_argument('--chunk-id', '--chunk_id', dest='chunk_id', required=False, type=int, default=None, help='Chunk ID to process for sharded artifacts')
+    parser.add_argument('--chunk-id', '--chunk_id', dest='chunk_id', required=False, type=int, default=None, help='Chunk ID to process for chunked artifacts')
     parser.add_argument('--no-suffix-completions', '--no_suffix_completions', dest='no_suffix_completions', action=argparse.BooleanOptionalAction, help='Whether to evaluate no suffix completions or not')
     parser.add_argument('--rephrasings', action=argparse.BooleanOptionalAction, help='Whether to evaluate rephrasing completions or not')
     parser.add_argument('--gcg-push', '--gcg_push', dest='gcg_push', action=argparse.BooleanOptionalAction, help='Whether to evaluate GCG push completions or not')

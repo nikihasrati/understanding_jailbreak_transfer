@@ -33,18 +33,17 @@ This table provides an overview of what to run, in what order, what checkpoint o
 
 Path shorthand:
 - `<output-dir>`: usually `data/intra_model_transfer/multi_seed`.
-- `<artifact-dir>`: usually `<output-dir>/$MODEL_ALIAS/transfer/all`.
-- Some published multi-seed transfer artifacts are split into shard directories such as `shard-00`; use the specific artifact directory you are processing.
+- `<artifact-dir>`: usually `<output-dir>/$MODEL_ALIAS/transfer`.
 
 | Step | Workflow stage | Paper section(s) | Main module | Save location |
 | --- | --- | --- | --- | --- |
 | 1 | Generate suffixes | Section 4 | `python -m pipeline suffixes run-gcg` | Saves raw GCG results to:<br>`data/gcg_results/raw/<model>/`<br>`index-*/seed-*/results.json` |
 | 2 | Build datasets | Section 4; Section 5.1 | `python -m pipeline suffixes create-datasets --check` | Saves JSON files to:<br>`<output-dir>/$MODEL_ALIAS/no_transfer/records.json`<br>`<output-dir>/$MODEL_ALIAS/transfer/records.json`<br>Prints prompt/seed coverage checks. |
 | 3 | Publish JSON artifacts | Reproducibility support for Sections 4-5 | `python -m pipeline artifacts split-json`<br>`python -m pipeline artifacts verify-manifest` | Saves canonical chunks and manifest:<br>`<artifact-dir>/chunks/chunk_*.json`<br>`<artifact-dir>/manifest.json`<br>Manifest verification should pass. |
-| 4 | Prepare generation jobs | Operational support for Section 4 | `python -m pipeline artifacts prepare-generation` | Saves temporary generation shards:<br>`<artifact-dir>/generation_chunks/chunk_*.json` |
-| 5 | Generate responses | Section 4 | `python -m pipeline completions generate` | Updates generation shards with `response`:<br>`<artifact-dir>/generation_chunks/chunk_*.json` |
-| 6 | Re-shard for evaluation | Operational support for Section 4 | `python -m pipeline artifacts combine-completions` | Saves fewer judge-ready shards:<br>`<artifact-dir>/evaluation_chunks/chunk_*.json` |
-| 7 | Judge responses | Section 4; Definition 1; Section 5 | `python -m pipeline completions evaluate` | Updates evaluation shards with `jailbroken`:<br>`<artifact-dir>/evaluation_chunks/chunk_*.json` |
+| 4 | Prepare generation jobs | Operational support for Section 4 | `python -m pipeline artifacts prepare-generation` | Saves temporary generation chunks:<br>`<artifact-dir>/generation_chunks/chunk_*.json` |
+| 5 | Generate responses | Section 4 | `python -m pipeline completions generate` | Updates generation chunks with `response`:<br>`<artifact-dir>/generation_chunks/chunk_*.json` |
+| 6 | Re-split for evaluation | Operational support for Section 4 | `python -m pipeline artifacts combine-completions` | Saves fewer judge-ready chunks:<br>`<artifact-dir>/evaluation_chunks/chunk_*.json` |
+| 7 | Judge responses | Section 4; Definition 1; Section 5 | `python -m pipeline completions evaluate` | Updates evaluation chunks with `jailbroken`:<br>`<artifact-dir>/evaluation_chunks/chunk_*.json` |
 | 8 | Publish evaluated artifacts | Reproducibility support for Section 5 | `python -m pipeline artifacts combine-completions`<br>`--write-manifest` | Replaces canonical chunks and manifest:<br>`<artifact-dir>/chunks/chunk_*.json`<br>`<artifact-dir>/manifest.json` |
 | 9 | Normalize labels | Definition 1; Section 5 | `python -m pipeline completions normalize-labels` | Writes to the command's `--output`, commonly:<br>`<artifact-dir>/combined.json`<br>Split back to `chunks/` before committing. |
 | 10 | Generate no-suffix baseline | Section 4; Section 5.1; Section 5.6 | `python -m pipeline completions generate`<br>`--no-suffix-completions`<br>`python -m pipeline completions evaluate`<br>`--no-suffix-completions` | Saves and updates:<br>`data/no_suffix_generations/`<br>`${MODEL_ALIAS}/combined.json` |

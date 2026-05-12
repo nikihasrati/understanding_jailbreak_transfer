@@ -81,7 +81,7 @@ def workflow_chunk_path(path: str | Path, chunk_id: int, stage: str) -> str:
         if generation.exists():
             raise FileNotFoundError(
                 f'Found generation chunk {generation}, but evaluation reads temporary evaluation_chunks/. '
-                'Run tools/combine_completions.py to re-shard generation chunks for evaluation.'
+                'Run tools/combine_completions.py to re-split generation chunks for evaluation.'
             )
         canonical = directory / 'chunks' / f'chunk_{chunk_id:05d}.json'
         if canonical.exists():
@@ -134,6 +134,19 @@ def load_manifest_records(manifest_path: str | Path) -> tuple[dict[str, Any], li
     for chunk in manifest['chunks']:
         records.extend(load_json_records(manifest_path.parent / chunk['path']))
     return manifest, records
+
+
+def load_artifact_dataframe(path: str | Path) -> Any:
+    if pd is None:
+        raise ImportError('pandas is required to load artifact dataframes')
+    path = Path(path)
+    if path.exists():
+        return pd.read_json(path)
+    manifest_path = path.with_name('manifest.json')
+    if manifest_path.exists():
+        _, records = load_manifest_records(manifest_path)
+        return pd.DataFrame(records)
+    raise FileNotFoundError(path)
 
 
 def chunk_sort_key(path: Path) -> tuple[int, int | str]:

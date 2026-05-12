@@ -38,7 +38,7 @@ These utilities are not paper claims by themselves, but they make the release re
 | `pipeline artifacts combine-json` | Rebuilds temporary full JSON files such as `combined.json` from committed chunks. |
 | `pipeline artifacts verify-manifest` and `pipeline artifacts make-manifest` | Verifies or creates checksum manifests for committed artifacts. |
 | `pipeline artifacts prepare-generation` | Creates temporary `generation_chunks/` from canonical chunks before model-response generation. |
-| `pipeline artifacts combine-completions` | Re-shards generated records for evaluation jobs and promotes evaluated records back to canonical chunks. |
+| `pipeline artifacts combine-completions` | Re-splits generated records for evaluation jobs and promotes evaluated records back to canonical chunks. |
 | `scripts/slurm/*` and `scripts/local/*` | Provide Slurm and local wrappers for the same `python -m pipeline ...` commands. The recommended workflow is documented in `docs/slurm_workflow.md`; `docs/workflow.md` is the local-command equivalent. |
 
 ## Paper Concepts Used by the Workflow

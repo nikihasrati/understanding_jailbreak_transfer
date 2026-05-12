@@ -18,3 +18,5 @@ data/activations/
 **/generation_chunks/
 **/evaluation_chunks/
 **/combined.json
+data/intra_model_transfer/multi_seed/*/no_transfer/records.json
+data/intra_model_transfer/multi_seed/*/transfer/records.json
