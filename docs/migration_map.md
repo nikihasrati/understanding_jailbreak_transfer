@@ -21,6 +21,9 @@ The old repositories were treated as read-only sources. This repo is the consoli
 - Raw per-seed GCG result JSON files for v1.
 - Refusal-direction vectors and metadata under normal Git file limits.
 - Model wrapper support files for the external refusal-direction repository under `external/refusal_direction_model_utils/`.
+- Paper-result dataset builders, prompt-rephrasing analysis, and human-eval summaries from `clean_code_TMLR_Sarah`, migrated to `pipeline/paper/`.
+- R mixed-effects analysis scripts from `clean_code_TMLR_Sarah`, migrated to `scripts/r/` with command-line data and output directories.
+- Reviewed human-eval labels from `clean_code_TMLR_Sarah/human_eval/reviewed_sampled_items.json`, committed as manifest-backed chunks under `data/human_eval/reviewed_sampled_items/`.
 
 ## Explicitly Excluded
 
@@ -29,6 +32,7 @@ The old repositories were treated as read-only sources. This repo is the consoli
 - BERT prompt embedding scripts.
 - Activation tensor artifacts.
 - Slurm logs, symlinks, job summaries, virtual environments, caches, and personal launch wrappers.
+- Empty Sarah snapshot `data/` and `results/` directories, `.DS_Store` files, unresolved placeholder paths, and inline token/login TODOs.
 
 ## GCG-Push Consolidation
 
@@ -54,3 +58,32 @@ gcg-push/processed_datasets and evaluated results used by the paper
 ```
 
 Slurm logs, personal script folders, and old machine-specific paths were intentionally not migrated. The new config file uses placeholders for cluster-specific settings and avoids personal names or email addresses.
+
+## TMLR Sarah Snapshot Consolidation
+
+The local `clean_code_TMLR_Sarah` directory was treated as a read-only analysis snapshot. Its useful pieces were consolidated as follows:
+
+```text
+clean_code_TMLR_Sarah/prepare_datasets_semantics.py
+  -> pipeline/paper/semantic_dataset.py
+  -> pipeline/paper/prompt_embeddings.py
+
+clean_code_TMLR_Sarah/prepare_datasets_suffix_push_orthogonal_shift.py
+  -> pipeline/paper/feature_dataset.py
+
+clean_code_TMLR_Sarah/prompt_rephrasing_intervention/analysing_rephrases.py
+  -> pipeline/paper/prompt_rephrasing_analysis.py
+
+clean_code_TMLR_Sarah/human_eval/sample_test_cases.py
+  -> pipeline/paper/human_eval.py
+
+clean_code_TMLR_Sarah/semantics_model.R
+clean_code_TMLR_Sarah/full_random_effects_model.R
+  -> scripts/r/semantics_model.R
+  -> scripts/r/full_random_effects_model.R
+
+clean_code_TMLR_Sarah/human_eval/reviewed_sampled_items.json
+  -> data/human_eval/reviewed_sampled_items/manifest.json + chunks/
+```
+
+The migrated Python commands use this repo's manifest-backed artifacts, `Config` paths, and regenerated activation chunks instead of Sarah's local placeholder paths.

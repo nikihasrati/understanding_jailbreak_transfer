@@ -122,3 +122,21 @@ The paper configuration is `configs/gcg_push_paper.example.yaml`; it records the
 ## Binary Files
 
 Refusal-direction `.pt` files are stored because they are below GitHub's normal file limit and are needed for the paper's Definition 2 and activation-derived features. Activation tensors are excluded from Git and regenerated with the commands in [activations.md](activations.md).
+
+## Human-Eval Artifact
+
+The reviewed human validation sample for the jailbreak judge is stored as:
+
+```text
+data/human_eval/reviewed_sampled_items/
+  manifest.json
+  chunks/
+    chunk_00000.json
+```
+
+Summarize it with:
+
+```bash
+python -m pipeline paper human-eval summarize \
+  --input data/human_eval/reviewed_sampled_items
+```

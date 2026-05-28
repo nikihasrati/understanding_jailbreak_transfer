@@ -14,6 +14,9 @@ from pipeline.config import Config
 from pipeline.evaluation.evaluate_completions import evaluate_generations, parse_arguments as parse_evaluation_legacy
 from pipeline.evaluation.evaluate_completions import parse_args as parse_evaluation_args
 from pipeline.generation.generate_completions import generate_for_path
+from pipeline.paper import common as paper_common
+from pipeline.paper.human_eval import summarize_items
+from pipeline.paper.prompt_rephrasing_analysis import build_analysis as build_prompt_rephrasing_analysis
 from tools.split_json_records import main as split_json_records_main
 
 
@@ -284,6 +287,88 @@ class ArtifactHelperTests(unittest.TestCase):
                 cli.main(['fake', 'run', '--canonical', 'value'])
 
         self.assertEqual(calls, [['--legacy', 'value']])
+
+    def test_paper_commands_are_registered(self):
+        self.assertIn(('paper', 'registry'), cli.COMMANDS)
+        self.assertIn(('paper', 'semantic-dataset'), cli.COMMANDS)
+        self.assertIn(('paper', 'feature-dataset'), cli.COMMANDS)
+        self.assertIn(('paper', 'prompt-rephrasing-analysis'), cli.COMMANDS)
+        self.assertIn(('paper', 'human-eval'), cli.COMMANDS)
+
+    def test_paper_source_prompt_ids_for_100d_and_1d(self):
+        import pandas as pd
+
+        df = pd.DataFrame({'suffix_id': [0, 99, 100, 314]})
+        multi = paper_common.add_source_prompt_ids(df, suffixes_per_prompt=100)
+        self.assertEqual(multi['source_prompt_id'].tolist(), [0, 0, 1, 3])
+        single = paper_common.add_source_prompt_ids(df, suffixes_per_prompt=100, one_dimensional=True)
+        self.assertEqual(single['source_prompt_id'].tolist(), [0, 99, 100, 314])
+
+    def test_prompt_rephrasing_analysis_matches_rephrases_to_original_suffixes(self):
+        import pandas as pd
+
+        evaluated = pd.DataFrame(
+            [
+                {
+                    'rephrased_prompt_id': 0,
+                    'original_prompt_id': 7,
+                    'prompt': 'para a',
+                    'original_prompt': 'orig',
+                    'ori_dot_product': 10.0,
+                    'dot_product': 8.0,
+                    'similarity': 0.9,
+                    'suffix_id': 0,
+                    'old_suffix_id': 100,
+                    'jailbroken': True,
+                },
+                {
+                    'rephrased_prompt_id': 0,
+                    'original_prompt_id': 7,
+                    'prompt': 'para a',
+                    'original_prompt': 'orig',
+                    'ori_dot_product': 10.0,
+                    'dot_product': 8.0,
+                    'similarity': 0.9,
+                    'suffix_id': 1,
+                    'old_suffix_id': 101,
+                    'jailbroken': False,
+                },
+            ]
+        )
+        baseline = pd.DataFrame(
+            [
+                {'prompt_id': 7, 'suffix_id': 100, 'jailbroken': False},
+                {'prompt_id': 7, 'suffix_id': 101, 'jailbroken': False},
+                {'prompt_id': 8, 'suffix_id': 100, 'jailbroken': True},
+            ]
+        )
+
+        details, summary = build_prompt_rephrasing_analysis(evaluated, baseline)
+
+        self.assertEqual(len(details), 1)
+        self.assertEqual(details.loc[0, 'rephrase_asr'], 0.5)
+        self.assertEqual(details.loc[0, 'original_asr'], 0.0)
+        self.assertEqual(details.loc[0, 'asr_change'], 0.5)
+        self.assertEqual(details.loc[0, 'dot_product_change'], -2.0)
+        self.assertEqual(summary['rephrased_prompts'], 1)
+
+    def test_human_eval_summary_uses_human_eval_as_disagreement_indicator(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            records = [
+                {'model': 'a', 'jailbroken': True, 'human_eval': 0},
+                {'model': 'a', 'jailbroken': False, 'human_eval': 1},
+                {'model': 'b', 'jailbroken': False, 'human_eval': 0},
+            ]
+            chunks = artifacts.write_json_chunks(records, root / 'chunks', 1, artifact_dir=root)
+            (root / 'manifest.json').write_text(json.dumps({'chunks': chunks}, indent=2) + '\n')
+
+            summary = summarize_items(root)
+
+        self.assertEqual(summary['records'], 3)
+        self.assertEqual(summary['judge_jailbroken'], 1)
+        self.assertEqual(summary['disagreements'], 1)
+        self.assertAlmostEqual(summary['agreement_rate'], 2 / 3)
 
     def test_canonical_and_legacy_evaluation_args_parse_equivalently(self):
         canonical = parse_evaluation_args([

@@ -1,0 +1,35 @@
+{
+  "artifact_format": "chunked_json",
+  "source": "human_eval/reviewed_sampled_items",
+  "original_bytes": 1722583,
+  "original_sha256": "425a6eeb9820af4a1a30f800b7d851cae45998e46432788b7c4ac688c1547322",
+  "top_level": "array",
+  "total_records": 2000,
+  "total_chunks": 4,
+  "chunks": [
+    {
+      "path": "chunks/chunk_00000.json",
+      "records": 500,
+      "bytes": 376466,
+      "sha256": "7cebab05d35c1a9509da305c7337adcc207fbcaa455fb368aa99833e8f36d85b"
+    },
+    {
+      "path": "chunks/chunk_00001.json",
+      "records": 500,
+      "bytes": 368652,
+      "sha256": "4ca15b030f3f64b602f0cd56bc10680559a2696025738f4b9b247a1e6196216d"
+    },
+    {
+      "path": "chunks/chunk_00002.json",
+      "records": 500,
+      "bytes": 392833,
+      "sha256": "0e5564f2fa838aad995a5bb61ec1e6a3bab7559b9cfcbd917b1aa99641a16524"
+    },
+    {
+      "path": "chunks/chunk_00003.json",
+      "records": 500,
+      "bytes": 394638,
+      "sha256": "1768c2d91093c8e4aab13e0e9571cc82b24e76c6b3a4a8af918f05fa6f09ec06"
+    }
+  ]
+}

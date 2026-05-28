@@ -103,6 +103,20 @@ COMMANDS: dict[tuple[str, str], Command] = {
         'pipeline.prompt_rephrasings.setup_dataset',
         aliases={'--model-path': '--model_path'},
     ),
+    ('paper', 'registry'): Command('pipeline.paper.registry'),
+    ('paper', 'prompt-embeddings'): Command(
+        'pipeline.paper.prompt_embeddings',
+    ),
+    ('paper', 'semantic-dataset'): Command(
+        'pipeline.paper.semantic_dataset',
+    ),
+    ('paper', 'feature-dataset'): Command(
+        'pipeline.paper.feature_dataset',
+    ),
+    ('paper', 'prompt-rephrasing-analysis'): Command(
+        'pipeline.paper.prompt_rephrasing_analysis',
+    ),
+    ('paper', 'human-eval'): Command('pipeline.paper.human_eval'),
 }
 
 

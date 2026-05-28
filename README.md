@@ -24,6 +24,7 @@ Read the docs in this order if you are reproducing results for the first time:
 | [docs/artifacts.md](docs/artifacts.md) | Data layout, chunked JSON manifests, checksums, and how to combine chunked files. |
 | [docs/activations.md](docs/activations.md) | How to regenerate activations and export alternate activation layouts. |
 | [docs/refusal_directions.md](docs/refusal_directions.md) | How refusal directions are stored, inspected, and regenerated. |
+| [docs/paper_results.md](docs/paper_results.md) | Paper-facing registry for reproducing figures, tables, and intervention summaries. |
 | [docs/migration_map.md](docs/migration_map.md) | What was consolidated from the old repositories and what was intentionally excluded. |
 | [docs/future_work.md](docs/future_work.md) | Follow-up cleanup that is intentionally out of scope for this release. |
 
@@ -52,6 +53,7 @@ Path shorthand:
 | 13 | Analyze cross-model transfer | Section 3.1; Section 5.1; Section 5.5 | `python -m pipeline cross-model ...` | Saves transfer records under:<br>`data/cross_model_transfer_generations/`<br>`${SOURCE_ALIAS}_to_${TARGET_ALIAS}/`<br>Saves figures under:<br>`figures/${SOURCE_ALIAS}_to_${TARGET_ALIAS}/` |
 | 14 | Run and analyze GCG-push interventions | Section 5.6; Tables 4-5 | `python -m pipeline gcg-push launch`<br>`python -m pipeline gcg-push run`<br>`python -m pipeline gcg-push create-datasets`<br>`python -m pipeline gcg-push analyze` | Raw rerun outputs:<br>`outputs/gcg_push/raw/$MODEL_ALIAS/`<br>Published artifacts:<br>`data/gcg_push_results/$MODEL_ALIAS/`<br>`{suffix_push,orth_shift}/coeff-$COEFF/`<br>`{no_transfer,transfer}/`<br>Analysis summaries:<br>`outputs/gcg_push_analysis/` |
 | 15 | Analyze prompt rephrasings | Section 5.6; Appendix C | `python -m pipeline prompt-rephrasings setup`<br>`--rephrasings` generation/evaluation | Saves setup dataset to:<br>`data/prompt_rephrasings/`<br>`${MODEL_ALIAS}/combined.json`<br>Generation/evaluation chunks live under the same artifact directory. |
+| 16 | Rebuild paper tables and audit summaries | Sections 5 and Appendix B/C/E | `python -m pipeline paper registry`<br>`python -m pipeline paper semantic-dataset`<br>`python -m pipeline paper feature-dataset`<br>`Rscript scripts/r/*.R` | Saves analysis datasets and fitted-table outputs under:<br>`outputs/paper/` |
 
 The recommended command-by-command workflow is in [docs/slurm_workflow.md](docs/slurm_workflow.md). The local-command equivalent is in [docs/workflow.md](docs/workflow.md), but it is provided as an untested reference rather than the primary reproduction path.
 
@@ -90,6 +92,7 @@ understanding_jailbreak_transfer/
     cross_model/                    Cross-model setup, generation, evaluation, and analysis.
     gcg_push/                       Config-driven altered-GCG runner, artifact builder, launcher, and analysis.
     prompt_rephrasings/             Prompt-rephrasing dataset setup.
+    paper/                          Camera-ready paper result datasets, summaries, and registry commands.
     model_utils/                    Model wrappers used by this repository.
   scripts/                          Local and Slurm convenience wrappers.
   tools/                            Artifact chunking, combining, checksum, and tensor utilities.
