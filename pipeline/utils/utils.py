@@ -67,11 +67,14 @@ def get_jailbreak_success_matrix_df(transfer_df):
     success_matrix = transfer_df.pivot(index='prompt_id', columns='suffix_id', values='jailbroken')
     return success_matrix.astype(int)
 
-def plot_jailbreak_success_matrix(success_matrix, cfg, x_label, y_label, multi_seed=False):
-    if multi_seed:
+def plot_jailbreak_success_matrix(success_matrix, cfg, x_label, y_label, multi_seed=False, save_path=None):
+    if save_path is not None:
+        save_path = str(save_path)
+    elif multi_seed:
         save_path = cfg.multi_seed_jailbreak_success_matrix_figure_path()
     else:
         save_path = cfg.jailbreak_success_matrix_figure_path()
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(25, 25))
     cmap = ListedColormap(['white', '#4C72B0'])
     ax.imshow(success_matrix, cmap=cmap, interpolation='none')

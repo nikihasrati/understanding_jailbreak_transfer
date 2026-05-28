@@ -1,9 +1,17 @@
 import argparse
+import random
+from pathlib import Path
 
 def parse_args(argv=None):
     """Parse arguments from command line."""
     parser = argparse.ArgumentParser(description="Parse arguments.")
     parser.add_argument('--model-path', '--model_path', dest='model_path', type=str, required=True, help='Path to the model')
+    parser.add_argument(
+        '--sample-random-state',
+        type=int,
+        default=0,
+        help='RNG seed used to choose one generated suffix seed per source prompt for the sampled transfer plot.',
+    )
     return parser.parse_args(argv)
 
 
@@ -47,11 +55,45 @@ def plot_cosine_similarity_with_refusal(cosine_similarities, prompt_cosine_sim_w
         # plt.Line2D([0], [0], color='green', label='Harmful Prompt + Top 3 Most Successful Suffixes'),
         # plt.Line2D([0], [0], color='orange', label='Harmful Prompt + Top 3 Least Successful Suffixes')
     # ])
+    save_path = Path(cfg.figures_dir()) / 'cosine_similarity_across_layers_suffixes_direction_multi_seed.png'
+    save_path.parent.mkdir(parents=True, exist_ok=True)
     plt.tight_layout()
-    plt.savefig(f'figures/{cfg.model_alias}/cosine_similarity_across_layers_suffixes_direction_multi_seed.png')
+    plt.savefig(save_path)
     plt.close()
 
-def data_analysis(cfg):
+def get_random_suffix_per_source_prompt_transfer_matrix(transfer_df, cfg, random_state=0):
+    """Build a transfer matrix after sampling one generated seed per source prompt."""
+    df = transfer_df.copy()
+    suffixes_per_prompt = cfg.num_suffixes_per_prompt
+    df["source_prompt_id"] = df["suffix_id"] // suffixes_per_prompt
+
+    expected_seed = df["suffix_id"] % suffixes_per_prompt
+    if not expected_seed.eq(df["seed"]).all():
+        raise ValueError(
+            "Expected suffix_id to encode source prompt and seed as "
+            "source_prompt_id * num_seeds + seed."
+        )
+
+    rng = random.Random(random_state)
+    suffix_seed_df = df[["source_prompt_id", "seed", "suffix_id"]].drop_duplicates()
+    selected_suffix_ids = []
+    selected_seeds_by_source_prompt = {}
+
+    for source_prompt_id, group in suffix_seed_df.groupby("source_prompt_id", sort=True):
+        seeds = sorted(group["seed"].unique().tolist())
+        selected_seed = rng.choice(seeds)
+        selected_suffixes = group.loc[group["seed"] == selected_seed, "suffix_id"].unique()
+        if len(selected_suffixes) != 1:
+            raise ValueError(f"Expected one suffix for source prompt {source_prompt_id} and seed {selected_seed}.")
+
+        selected_suffix_ids.append(selected_suffixes[0])
+        selected_seeds_by_source_prompt[int(source_prompt_id)] = int(selected_seed)
+
+    sampled_df = df[df["suffix_id"].isin(selected_suffix_ids)]
+    success_matrix = sampled_df.pivot(index="prompt_id", columns="source_prompt_id", values="jailbroken")
+    return success_matrix.astype(int), selected_seeds_by_source_prompt
+
+def data_analysis(cfg, sample_random_state=0):
     ### No Transfer ###
     no_transfer_multi_seed_df = utils.get_multi_seed_df(cfg, transfer=False)
 
@@ -74,6 +116,22 @@ def data_analysis(cfg):
     transfer_multi_seed_df = utils.get_multi_seed_df(cfg, transfer=True)
     transfer_success_matrix_df = utils.get_jailbreak_success_matrix_df(transfer_multi_seed_df)
     num_prompts, num_suffixes = transfer_success_matrix_df.shape
+
+    sampled_transfer_success_matrix_df, selected_seeds = get_random_suffix_per_source_prompt_transfer_matrix(
+        transfer_multi_seed_df,
+        cfg,
+        random_state=sample_random_state,
+    )
+    sampled_transfer_figure_path = cfg.multi_seed_random_suffix_transfer_matrix_figure_path(sample_random_state)
+    utils.plot_jailbreak_success_matrix(
+        sampled_transfer_success_matrix_df,
+        cfg,
+        x_label="Suffix",
+        y_label="Prompt",
+        save_path=sampled_transfer_figure_path,
+    )
+    print(f"Saved sampled multi-seed transfer matrix to {sampled_transfer_figure_path}")
+    print(f"Selected seeds by source prompt: {selected_seeds}")
 
     most_successful_suffixes = transfer_success_matrix_df.sum(axis=0).nlargest(n).index.tolist()
     least_successful_suffixes = transfer_success_matrix_df.sum(axis=0).nsmallest(n).index.tolist()
@@ -115,7 +173,7 @@ def main(argv=None):
     from pipeline.config import Config
     from pipeline.utils.activation_utils import get_prompt_activations
     cfg = Config(model_path=args.model_path)
-    data_analysis(cfg)
+    data_analysis(cfg, sample_random_state=args.sample_random_state)
 
 
 if __name__ == "__main__":

@@ -57,6 +57,21 @@ class Config:
     def single_seed_cross_prompt_transfer_generations_path(self) -> str:
         return self.single_seed_transfer_path()
 
+    def figures_dir(self) -> str:
+        return self._path(self.FIGURES, self.model_alias)
+
+    def jailbreak_success_matrix_figure_path(self) -> str:
+        return self._path(self.figures_dir(), 'jailbreak_success_matrix.png')
+
+    def multi_seed_jailbreak_success_matrix_figure_path(self) -> str:
+        return self._path(self.figures_dir(), 'multi_seed_jailbreak_success_matrix.png')
+
+    def multi_seed_random_suffix_transfer_matrix_figure_path(self, random_state: int = 0) -> str:
+        return self._path(
+            self.figures_dir(),
+            f'multi_seed_random_suffix_transfer_matrix_seed_{random_state}.png',
+        )
+
     def cross_model_transfer_generations_dir(self) -> str:
         return self._path(self.DATASET_DIR, 'cross_model_transfer_generations')
 
