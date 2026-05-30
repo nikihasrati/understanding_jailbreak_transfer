@@ -1,6 +1,6 @@
 # Paper Results
 
-This page is the paper-facing reproduction checklist. It complements the workflow docs, which are organized by operational stage. The source snapshot `clean_code_TMLR_Sarah` was treated as read-only; its reusable analysis logic is exposed through `python -m pipeline paper ...` commands and the R scripts in `scripts/r/`.
+This page is the paper-facing reproduction checklist. It complements the workflow docs, which are organized by operational stage. The legacy TMLR analysis snapshot was treated as read-only; its reusable analysis logic is exposed through `python -m pipeline paper ...` commands and the R scripts in `scripts/r/`.
 
 ## Result Registry
 
