@@ -1,6 +1,7 @@
 name: understanding_jailbreak_transfer_env
 channels:
   - pytorch
+  - conda-forge
   - defaults
   - https://repo.anaconda.com/pkgs/main
   - https://repo.anaconda.com/pkgs/r
@@ -148,6 +149,12 @@ dependencies:
   - pytorch-mutex=1.0=cpu
   - pyyaml=6.0.2=py39h5eee18b_0
   - re2=2024.07.02=hdb19cb5_0
+  - r-base
+  - r-broom.mixed
+  - r-dplyr
+  - r-lme4
+  - r-performance
+  - r-readr
   - readline=8.2=h5eee18b_0
   - regex=2024.11.6=py39h5eee18b_0
   - reproc=14.2.4=h6a678d5_2
