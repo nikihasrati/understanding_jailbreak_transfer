@@ -52,8 +52,8 @@ Path shorthand:
 | 12 | Analyze multi-seed transfer | Sections 5.1-5.5 | `python -m pipeline analysis multi-seed` | Prints ASR summaries.<br>Saves figures under:<br>`figures/$MODEL_ALIAS/` |
 | 13 | Analyze cross-model transfer | Section 3.1; Section 5.1; Section 5.5 | `python -m pipeline cross-model ...` | Saves transfer records under:<br>`data/cross_model_transfer_generations/`<br>`${SOURCE_ALIAS}_to_${TARGET_ALIAS}/`<br>Saves figures under:<br>`figures/${SOURCE_ALIAS}_to_${TARGET_ALIAS}/` |
 | 14 | Run and analyze GCG-push interventions | Section 5.6; Tables 4-5 | `python -m pipeline gcg-push launch`<br>`python -m pipeline gcg-push run`<br>`python -m pipeline gcg-push create-datasets`<br>`python -m pipeline gcg-push analyze` | Raw rerun outputs:<br>`outputs/gcg_push/raw/$MODEL_ALIAS/`<br>Published artifacts:<br>`data/gcg_push_results/$MODEL_ALIAS/`<br>`{suffix_push,orth_shift}/coeff-$COEFF/`<br>`{no_transfer,transfer}/`<br>Analysis summaries:<br>`outputs/gcg_push_analysis/` |
-| 15 | Analyze prompt rephrasings | Section 5.6; Appendix C | `python -m pipeline prompt-rephrasings setup`<br>`--rephrasings` generation/evaluation | Saves setup dataset to:<br>`data/prompt_rephrasings/`<br>`${MODEL_ALIAS}/combined.json`<br>Generation/evaluation chunks live under the same artifact directory. |
-| 16 | Rebuild paper tables and audit summaries | Sections 5 and Appendix B/C/E | `python -m pipeline paper registry`<br>`python -m pipeline paper semantic-dataset`<br>`python -m pipeline paper feature-dataset`<br>`Rscript scripts/r/*.R` | Saves analysis datasets and fitted-table outputs under:<br>`outputs/paper/` |
+| 15 | Analyze prompt rephrasings | Section 5.6; Appendix C | `python -m pipeline prompt-rephrasings generate`<br>`python -m pipeline prompt-rephrasings setup`<br>`--rephrasings` generation/evaluation | Saves generated rephrases to:<br>`data/prompt_rephrasings/`<br>`${MODEL_ALIAS}_unprocessed_rephrasings.json`<br>Saves setup/evaluation records under:<br>`data/prompt_rephrasings/${MODEL_ALIAS}/` |
+| 16 | Rebuild paper tables, figures, and audit summaries | Sections 5 and Appendix B/C/E | `python -m pipeline paper registry`<br>`python -m pipeline paper semantic-dataset`<br>`python -m pipeline paper feature-dataset`<br>`python -m pipeline paper figures refusal-density`<br>`python -m pipeline paper figures suffix-geometry`<br>`Rscript scripts/r/*.R` | Saves analysis datasets, figures, and fitted-table outputs under:<br>`outputs/paper/` |
 
 The recommended command-by-command workflow is in [docs/slurm_workflow.md](docs/slurm_workflow.md). The local-command equivalent is in [docs/workflow.md](docs/workflow.md), but it is provided as an untested reference rather than the primary reproduction path.
 
@@ -91,8 +91,8 @@ understanding_jailbreak_transfer/
     analysis/                       Multi-seed analysis.
     cross_model/                    Cross-model setup, generation, evaluation, and analysis.
     gcg_push/                       Config-driven altered-GCG runner, artifact builder, launcher, and analysis.
-    prompt_rephrasings/             Prompt-rephrasing dataset setup.
-    paper/                          Camera-ready paper result datasets, summaries, and registry commands.
+    prompt_rephrasings/             Prompt-rephrasing generation and dataset setup.
+    paper/                          Camera-ready paper result datasets, figures, summaries, and registry commands.
     model_utils/                    Model wrappers used by this repository.
   scripts/                          Local and Slurm convenience wrappers.
   tools/                            Artifact chunking, combining, checksum, and tensor utilities.

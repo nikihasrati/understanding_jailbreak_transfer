@@ -17,6 +17,7 @@ from pipeline.generation.generate_completions import generate_for_path
 from pipeline.paper import common as paper_common
 from pipeline.paper.human_eval import summarize_items
 from pipeline.paper.prompt_rephrasing_analysis import build_analysis as build_prompt_rephrasing_analysis
+from pipeline.prompt_rephrasings.generate_rephrases import extract_rephrases, parse_prompt_ids
 from tools.split_json_records import main as split_json_records_main
 
 
@@ -292,8 +293,15 @@ class ArtifactHelperTests(unittest.TestCase):
         self.assertIn(('paper', 'registry'), cli.COMMANDS)
         self.assertIn(('paper', 'semantic-dataset'), cli.COMMANDS)
         self.assertIn(('paper', 'feature-dataset'), cli.COMMANDS)
+        self.assertIn(('paper', 'figures'), cli.COMMANDS)
+        self.assertIn(('prompt-rephrasings', 'generate'), cli.COMMANDS)
         self.assertIn(('paper', 'prompt-rephrasing-analysis'), cli.COMMANDS)
         self.assertIn(('paper', 'human-eval'), cli.COMMANDS)
+
+    def test_prompt_rephrase_generation_helpers_parse_model_output(self):
+        text = "Here are the rephrases:\n1. First rewrite\n2) Second rewrite\n- Third rewrite"
+        self.assertEqual(extract_rephrases(text, 2), ['First rewrite', 'Second rewrite'])
+        self.assertEqual(parse_prompt_ids('0,2,5-7'), {0, 2, 5, 6, 7})
 
     def test_paper_source_prompt_ids_for_100d_and_1d(self):
         import pandas as pd

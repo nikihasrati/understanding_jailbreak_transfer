@@ -16,12 +16,12 @@ The old repositories were treated as read-only sources. This repo is the consoli
 - Activation regeneration commands and export formats under `pipeline/activations/`.
 - Multi-seed analysis under `pipeline/analysis/`.
 - Cross-model transfer setup, generation, evaluation, combination, checks, and analysis under `pipeline/cross_model/`.
-- GCG-push and prompt-rephrasing workflows.
+- GCG-push and prompt-rephrasing workflows, including prompt-rephrase generation.
 - JSON artifacts as manifest-backed chunks.
 - Raw per-seed GCG result JSON files for v1.
 - Refusal-direction vectors and metadata under normal Git file limits.
 - Model wrapper support files for the external refusal-direction repository under `external/refusal_direction_model_utils/`.
-- Paper-result dataset builders, prompt-rephrasing analysis, and human-eval summaries from the legacy TMLR analysis snapshot, migrated to `pipeline/paper/`.
+- Paper-result dataset builders, figure commands, prompt-rephrasing analysis, and human-eval summaries from the legacy TMLR analysis snapshot, migrated to `pipeline/paper/`.
 - R mixed-effects analysis scripts from the legacy TMLR analysis snapshot, migrated to `scripts/r/` with command-line data and output directories.
 - Reviewed human-eval labels from the legacy TMLR analysis snapshot, committed as manifest-backed chunks under `data/human_eval/reviewed_sampled_items/`.
 
@@ -71,8 +71,14 @@ legacy_tmlr_analysis/prepare_datasets_semantics.py
 legacy_tmlr_analysis/prepare_datasets_suffix_push_orthogonal_shift.py
   -> pipeline/paper/feature_dataset.py
 
+legacy_tmlr_analysis/figures.py
+  -> pipeline/paper/figures.py
+
 legacy_tmlr_analysis/prompt_rephrasing_intervention/analysing_rephrases.py
   -> pipeline/paper/prompt_rephrasing_analysis.py
+
+legacy_tmlr_analysis/prompt_rephrasing_intervention/generating_rephrases.py
+  -> pipeline/prompt_rephrasings/generate_rephrases.py
 
 legacy_tmlr_analysis/human_eval/sample_test_cases.py
   -> pipeline/paper/human_eval.py

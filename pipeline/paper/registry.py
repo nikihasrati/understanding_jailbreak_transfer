@@ -42,6 +42,8 @@ RESULTS = [
             "python -m pipeline activations save --model-path MODEL --input-kind prompts",
             "python -m pipeline activations save --model-path MODEL --input-kind multi_seed_jailbreak",
             "python -m pipeline paper feature-dataset --model-path MODEL --dimensionality 100d",
+            "python -m pipeline paper figures refusal-density --model-path MODEL",
+            "python -m pipeline paper figures suffix-geometry --model-path MODEL --dimensionality 100d",
         ],
     },
     {
@@ -77,7 +79,11 @@ RESULTS = [
         "id": "prompt_rephrasing",
         "paper_location": "Section 5.6 and Appendix C",
         "description": "Prompt rephrasing ASR-vs-refusal-dot-product intervention.",
-        "commands": ["python -m pipeline paper prompt-rephrasing-analysis --model-path MODEL"],
+        "commands": [
+            "python -m pipeline prompt-rephrasings generate --model-path MODEL",
+            "python -m pipeline prompt-rephrasings setup --model-path MODEL",
+            "python -m pipeline paper prompt-rephrasing-analysis --model-path MODEL",
+        ],
     },
 ]
 

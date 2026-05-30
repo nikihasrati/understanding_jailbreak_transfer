@@ -67,6 +67,21 @@ python -m pipeline paper feature-dataset \
 
 These commands read committed judged JSON artifacts and regenerated activation chunks. They write CSV files under `outputs/paper/`.
 
+## Figure Commands
+
+Rebuild migrated figure inputs from activation and feature datasets:
+
+```bash
+python -m pipeline paper figures refusal-density \
+  --model-path "$MODEL_ID"
+
+python -m pipeline paper figures suffix-geometry \
+  --model-path "$MODEL_ID" \
+  --dimensionality 100d
+```
+
+The commands write figures under `outputs/paper/figures/`. Use `--csv-output` to save the plotted data alongside the image.
+
 ## Mixed-Effects Tables
 
 Fit the R mixed-effects models after building the CSV datasets:
@@ -90,6 +105,13 @@ The R scripts require `lme4`, `performance`, `broom.mixed`, `dplyr`, and `readr`
 Prompt rephrasing analysis:
 
 ```bash
+python -m pipeline prompt-rephrasings generate \
+  --model-path "$MODEL_ID" \
+  --resume
+
+python -m pipeline prompt-rephrasings setup \
+  --model-path "$MODEL_ID"
+
 python -m pipeline paper prompt-rephrasing-analysis \
   --model-path "$MODEL_ID"
 ```

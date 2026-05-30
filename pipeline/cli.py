@@ -99,6 +99,10 @@ COMMANDS: dict[tuple[str, str], Command] = {
         },
     ),
     ('refusal', 'inspect'): Command('pipeline.refusal_directions.inspect_model'),
+    ('prompt-rephrasings', 'generate'): Command(
+        'pipeline.prompt_rephrasings.generate_rephrases',
+        aliases={'--model-path': '--model_path'},
+    ),
     ('prompt-rephrasings', 'setup'): Command(
         'pipeline.prompt_rephrasings.setup_dataset',
         aliases={'--model-path': '--model_path'},
@@ -115,6 +119,13 @@ COMMANDS: dict[tuple[str, str], Command] = {
     ),
     ('paper', 'prompt-rephrasing-analysis'): Command(
         'pipeline.paper.prompt_rephrasing_analysis',
+    ),
+    ('paper', 'figures'): Command(
+        'pipeline.paper.figures',
+        aliases={
+            '--model-path': '--model_path',
+            '--source-model-path': '--source_model_path',
+        },
     ),
     ('paper', 'human-eval'): Command('pipeline.paper.human_eval'),
 }

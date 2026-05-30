@@ -560,20 +560,38 @@ python -m pipeline gcg-push analyze \
 
 **Paper connection:** Section 5.6, "Prompt rephrasing"; Appendix C prompt-rephrasing instructions.
 
-Prompt rephrasing tests whether changing the wording of a harmful prompt changes its alignment with the refusal direction and, in turn, changes transfer success. `python -m pipeline prompt-rephrasings setup` converts generated paraphrases into evaluation records. The generation and evaluation steps then use the same model-response and jailbreak-judge workflow as the main multi-seed artifacts.
+Prompt rephrasing tests whether changing the wording of a harmful prompt changes its alignment with the refusal direction and, in turn, changes transfer success. `python -m pipeline prompt-rephrasings generate` creates the paraphrases and their refusal-direction/semantic-similarity scores. `python -m pipeline prompt-rephrasings setup` converts those generated paraphrases into evaluation records. The generation and evaluation steps then use the same model-response and jailbreak-judge workflow as the main multi-seed artifacts.
 
 Set these variables for this step:
 
 ```bash
 export GENERATION_CHUNK_ID=0
 export EVALUATION_CHUNK_ID=0
+export REPHRASING_ARTIFACT_DIR=data/prompt_rephrasings/$MODEL_ALIAS
+export NUM_GENERATION_CHUNKS=32
+export NUM_EVALUATION_CHUNKS=8
 export NUM_JUDGE_GPUS=4
 ```
 
 ```bash
+python -m pipeline prompt-rephrasings generate \
+  --model-path "$MODEL_ID" \
+  --resume
+
 python -m pipeline prompt-rephrasings setup \
   --model-path "$MODEL_ID" \
   --input-path data/prompt_rephrasings/${MODEL_ALIAS}_unprocessed_rephrasings.json
+
+python -m pipeline artifacts split-json \
+  --input "$REPHRASING_ARTIFACT_DIR/combined.json" \
+  --output "$REPHRASING_ARTIFACT_DIR" \
+  --records-per-chunk 5000 \
+  --manifest-source prompt_rephrasings/$MODEL_ALIAS
+
+python -m pipeline artifacts prepare-generation \
+  --artifact-dir "$REPHRASING_ARTIFACT_DIR" \
+  --num-output-chunks "$NUM_GENERATION_CHUNKS" \
+  --input-column jailbreak
 
 python -m pipeline completions generate \
   --model-path "$MODEL_ID" \
@@ -581,11 +599,27 @@ python -m pipeline completions generate \
   --chunk-id "$GENERATION_CHUNK_ID" \
   --resume
 
+python -m pipeline artifacts combine-completions \
+  --input-dir "$REPHRASING_ARTIFACT_DIR" \
+  --input-subdir generation_chunks \
+  --output-subdir evaluation_chunks \
+  --num-output-chunks "$NUM_EVALUATION_CHUNKS" \
+  --check-stage generation
+
 python -m pipeline completions evaluate \
   --model-path "$MODEL_ID" \
   --rephrasings \
   --chunk-id "$EVALUATION_CHUNK_ID" \
   --num-gpus "$NUM_JUDGE_GPUS"
+
+python -m pipeline artifacts combine-completions \
+  --input-dir "$REPHRASING_ARTIFACT_DIR" \
+  --input-subdir evaluation_chunks \
+  --output-subdir chunks \
+  --num-output-chunks "$NUM_EVALUATION_CHUNKS" \
+  --check-stage evaluation \
+  --write-manifest \
+  --manifest-source prompt_rephrasings/$MODEL_ALIAS
 ```
 
-**Output:** Prompt-rephrasing records are saved under `data/prompt_rephrasings/${MODEL_ALIAS}/`, with `generation_chunks/`, `evaluation_chunks/`, and final canonical `chunks/` following the same lifecycle as the main transfer artifacts.
+**Output:** Prompt-rephrasing source rows are saved to `data/prompt_rephrasings/${MODEL_ALIAS}_unprocessed_rephrasings.json`. Evaluation records are saved under `data/prompt_rephrasings/${MODEL_ALIAS}/`, with `generation_chunks/`, `evaluation_chunks/`, and final canonical `chunks/` following the same lifecycle as the main transfer artifacts.
