@@ -74,6 +74,9 @@ def get_random_suffix_per_source_prompt_transfer_matrix(transfer_df, cfg, random
             "source_prompt_id * num_seeds + seed."
         )
 
+    refused_prompt_ids = set(utils.get_previously_refused_indices(cfg).tolist())
+    df = df[df["source_prompt_id"].isin(refused_prompt_ids)]
+
     rng = random.Random(random_state)
     suffix_seed_df = df[["source_prompt_id", "seed", "suffix_id"]].drop_duplicates()
     selected_suffix_ids = []
