@@ -47,8 +47,12 @@ def transfer_generations_path(source_cfg, target_cfg) -> Path:
 
 def load_previously_refused_transfer_df(source_cfg, target_cfg) -> pd.DataFrame:
     transfer_df = pd.read_json(transfer_generations_path(source_cfg, target_cfg))
-    previously_refused_indices = utils.get_previously_refused_indices(target_cfg)
-    return transfer_df[transfer_df['prompt_id'].isin(previously_refused_indices)]
+    target_previously_refused_indices = utils.get_previously_refused_indices(target_cfg)
+    source_previously_refused_suffix_indices = utils.get_previously_refused_suffix_indices(source_cfg)
+    return transfer_df[
+        transfer_df['prompt_id'].isin(target_previously_refused_indices)
+        & transfer_df['suffix_id'].isin(source_previously_refused_suffix_indices)
+    ]
 
 
 def data_analysis(source_cfg, target_cfg):
